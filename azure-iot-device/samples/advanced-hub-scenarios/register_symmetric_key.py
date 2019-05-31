@@ -22,23 +22,18 @@ registration_id = os.getenv("PROVISIONING_REGISTRATION_ID")
 symmetric_key = os.getenv("PROVISIONING_SYMMETRIC_KEY")
 
 
-async def register_device():
-    symmetric_key_security_client = SymmetricKeySecurityClient(
-        provisioning_host, registration_id, symmetric_key, id_scope
-    )
-    provisioning_device_client = SymmetricKeyProvisioningDeviceClient.create_from_security_client(
-        symmetric_key_security_client, "mqtt"
-    )
-
-    await provisioning_device_client.register()
-
-
 async def main():
-    task1 = asyncio.create_task(register_device())
-    await task1
+    async def register_device():
+        symmetric_key_security_client = SymmetricKeySecurityClient(
+            provisioning_host, registration_id, symmetric_key, id_scope
+        )
+        provisioning_device_client = SymmetricKeyProvisioningDeviceClient.create_from_security_client(
+            symmetric_key_security_client, "mqtt"
+        )
 
-    # If using Python 3.6 or below, use the following code instead of asyncio.run(main()):
-    # await register_device()
+        await provisioning_device_client.register()
+
+    await asyncio.gather(register_device())
 
 
 if __name__ == "__main__":

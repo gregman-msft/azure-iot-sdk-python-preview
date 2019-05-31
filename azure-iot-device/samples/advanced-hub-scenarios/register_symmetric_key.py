@@ -4,9 +4,6 @@
 # license information.
 # --------------------------------------------------------------------------
 
-
-# This is for illustration purposes only. The sample will not work currently.
-
 import os
 import logging
 import asyncio

@@ -40,7 +40,7 @@ class UseSymmetricKeySecurityClient(PipelineStage):
 
             security_client = op.security_client
             self.run_ops_serial(
-                pipeline_ops_provisioning.SetSymmetricKeySecurityClientArgs(
+                pipeline_ops_provisioning.SetSymmetricKeySecurityClientArgs(  # TODO generic args?
                     provisioning_host=security_client.provisioning_host,
                     registration_id=security_client.registration_id,
                     id_scope=security_client.id_scope,
@@ -48,5 +48,19 @@ class UseSymmetricKeySecurityClient(PipelineStage):
                 pipeline_ops_base.SetSasToken(sas_token=security_client.get_current_sas_token()),
                 callback=pipeline_ops_done,
             )
+        elif isinstance(op, pipeline_ops_provisioning.SetX509SecurityClient):
+            security_client = op.security_client
+            self.run_ops_serial(
+                pipeline_ops_provisioning.SetSecurityClientArgs(
+                    provisioning_host=security_client.provisioning_host,
+                    registration_id=security_client.registration_id,
+                    id_scope=security_client.id_scope,
+                ),
+                pipeline_ops_base.SetCertificate(
+                    certificate=security_client.get_x509_certificate()
+                ),
+                callback=op.callback,
+            )
+
         else:
             self.continue_op(op)

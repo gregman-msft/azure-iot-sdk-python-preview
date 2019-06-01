@@ -144,7 +144,7 @@ class DisableFeature(PipelineOperation):
 class SetSasToken(PipelineOperation):
     """
     A PipelineOperation object which contains a SAS token used for connecting.  This operation was likely initiated
-    by a pipeline stage that knows how to generate SAS tokens based on some other operation (such as SetAuthProvider)
+    by a pipeline stage that knows how to generate SAS tokens based on some other operation (such as SetSecurityClient)
 
     This operation is in the group of base operations because many different clients use the concept of a SAS token.
 
@@ -166,6 +166,32 @@ class SetSasToken(PipelineOperation):
         self.sas_token = sas_token
 
 
+class SetCertificate(PipelineOperation):
+    """
+    A PipelineOperation object which contains a certificate used for connecting.  This operation was likely initiated
+    by a pipeline stage that knows how to generate certificates based on some other operation (such as SetSecurityClient)
+
+    This operation is in the group of base operations because many different clients use the concept of certificate.
+
+    Even though this is an base operation, it will most likely be generated and also handled by more specifics stages
+    (such as IotHub or Mqtt stages).
+    """
+
+    def __init__(self, certificate, callback=None):
+        """
+        Initializer for SetSasToken objects.
+
+        :param certificate: The certificate which will be used to authenticate with whatever service
+        this pipeline connects with. This certificate has the value as well as the key and
+        an optional pass-phrase.
+        :param Function callback: The function that gets called when this operation is complete
+        or has failed.  The callback function must accept A PipelineOperation object which indicates
+        the specific operation which has completed or failed.
+        """
+        super(SetCertificate, self).__init__(callback=callback)
+        self.certificate = certificate
+
+
 class SendIotRequestAndWaitForResponse(PipelineOperation):
     """
     A PipelineOperation object which wraps the common operation of sending a request to iothub with a request_id ($rid)
@@ -182,7 +208,7 @@ class SendIotRequestAndWaitForResponse(PipelineOperation):
     :ivar status_code: The status code returned by the response.  Any value under 300 is considered success.
     :type status_code: int
     :ivar response_body: The body of the response.
-    :type response_payload: Undefined
+    :type response_body: Undefined
     """
 
     def __init__(self, request_type, method, resource_location, request_body, callback=None):

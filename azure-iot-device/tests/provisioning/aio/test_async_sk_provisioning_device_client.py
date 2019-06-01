@@ -89,7 +89,8 @@ class TestClientCreate:
         self
     ):
         with pytest.raises(
-            ValueError, match="A symmetric key security provider must be provided for MQTT"
+            ValueError,
+            match="A symmetric key security client or a X509 security client must be provided for MQTT",
         ):
             not_symmetric_security_client = NonSymmetricSecurityClientTest()
             SymmetricKeyProvisioningDeviceClient.create_from_security_client(

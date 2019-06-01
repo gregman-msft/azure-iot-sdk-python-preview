@@ -14,6 +14,7 @@ from azure.iot.device.provisioning.pipeline import (
 )
 from azure.iot.device.provisioning.pipeline import pipeline_events_provisioning
 from azure.iot.device.provisioning.pipeline import pipeline_ops_provisioning
+from azure.iot.device.provisioning.security import SymmetricKeySecurityClient, X509SecurityClient
 
 logger = logging.getLogger(__name__)
 
@@ -28,6 +29,11 @@ class ProvisioningPipeline(object):
         self.on_provisioning_pipeline_connected = None
         self.on_provisioning_pipeline_disconnected = None
         self.on_provisioning_pipeline_message_received = None
+
+        # if isinstance(security_client, X509SecurityClient):
+        #     stage_security = pipeline_stages_provisioning.X509SecurityClient()
+        # else:
+        #     stage_security = pipeline_stages_provisioning.UseSymmetricKeySecurityClient()
 
         self._pipeline = (
             pipeline_stages_base.PipelineRoot()
@@ -65,11 +71,16 @@ class ProvisioningPipeline(object):
             if call.error:
                 raise call.error
 
-        self._pipeline.run_op(
-            pipeline_ops_provisioning.SetSymmetricKeySecurityClient(
+        if isinstance(security_client, X509SecurityClient):
+            op = pipeline_ops_provisioning.SetX509SecurityClient(
                 security_client=security_client, callback=remove_this_code
             )
-        )
+        else:
+            op = pipeline_ops_provisioning.SetSymmetricKeySecurityClient(
+                security_client=security_client, callback=remove_this_code
+            )
+
+        self._pipeline.run_op(op)
 
     def connect(self, callback=None):
         """

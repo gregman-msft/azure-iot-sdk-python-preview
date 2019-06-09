@@ -184,7 +184,7 @@ def op_set_sas_token(callback):
 
 @pytest.fixture
 def op_set_client_certificate(callback):
-    return pipeline_ops_base.SetCertificate(certificate=fake_certificate)
+    return pipeline_ops_base.SetClientAuthenticationCertificate(certificate=fake_certificate)
 
 
 @pytest.mark.describe("MQTT Provider pipeline stage _runOp function with SetSasToken operations")
@@ -234,7 +234,7 @@ connection_ops = [
         {
             "op_class": pipeline_ops_base.Reconnect,
             "op_init_kwargs": {},
-            "provider_function": "connect",
+            "provider_function": "reconnect",
             "provider_kwargs": {},
             "provider_handler": "on_mqtt_connected",
         },

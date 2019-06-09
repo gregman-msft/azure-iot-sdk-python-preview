@@ -30,14 +30,9 @@ class ProvisioningPipeline(object):
         self.on_provisioning_pipeline_disconnected = None
         self.on_provisioning_pipeline_message_received = None
 
-        # if isinstance(security_client, X509SecurityClient):
-        #     stage_security = pipeline_stages_provisioning.X509SecurityClient()
-        # else:
-        #     stage_security = pipeline_stages_provisioning.UseSymmetricKeySecurityClient()
-
         self._pipeline = (
             pipeline_stages_base.PipelineRoot()
-            .append_stage(pipeline_stages_provisioning.UseSymmetricKeySecurityClient())
+            .append_stage(pipeline_stages_provisioning.UseSymmetricKeyOrX509SecurityClient())
             .append_stage(pipeline_stages_base.EnsureConnection())
             .append_stage(pipeline_stages_provisioning_mqtt.ProvisioningMQTTConverter())
             .append_stage(pipeline_stages_mqtt.Provider())
@@ -75,10 +70,12 @@ class ProvisioningPipeline(object):
             op = pipeline_ops_provisioning.SetX509SecurityClient(
                 security_client=security_client, callback=remove_this_code
             )
-        else:
+        elif isinstance(security_client, SymmetricKeySecurityClient):
             op = pipeline_ops_provisioning.SetSymmetricKeySecurityClient(
                 security_client=security_client, callback=remove_this_code
             )
+        else:
+            logger.error("Provisioning not equipped to handle other security client.")
 
         self._pipeline.run_op(op)
 

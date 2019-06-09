@@ -53,7 +53,7 @@ api_version = "2019-03-31"
 
 
 ops_handled_by_this_stage = [
-    pipeline_ops_provisioning.SetSymmetricKeySecurityClientArgs,
+    pipeline_ops_provisioning.SetSecurityClientArgs,
     pipeline_ops_provisioning.SendRegistrationRequest,
     pipeline_ops_provisioning.SendQueryRequest,
     pipeline_ops_base.EnableFeature,
@@ -79,7 +79,7 @@ def mock_stage(mocker):
 
 @pytest.fixture
 def set_security_client_args(callback):
-    op = pipeline_ops_provisioning.SetSymmetricKeySecurityClientArgs(
+    op = pipeline_ops_provisioning.SetSecurityClientArgs(
         provisioning_host=fake_provisioning_host,
         registration_id=fake_registration_id,
         id_scope=fake_id_scope,

@@ -9,9 +9,9 @@ Azure Provisioning Device SDK for Python.
 
 import logging
 from azure.iot.device.common import async_adapter
-from ..abstract_provisioning_device_client import AbstractProvisioningDeviceClient
-from ..abstract_provisioning_device_client import log_on_register_complete
-from ..internal.polling_machine import PollingMachine
+from azure.iot.device.provisioning.abstract_provisioning_device_client import AbstractProvisioningDeviceClient
+from azure.iot.device.provisioning.abstract_provisioning_device_client import log_on_register_complete
+from azure.iot.device.provisioning.internal.polling_machine import PollingMachine
 
 logger = logging.getLogger(__name__)
 

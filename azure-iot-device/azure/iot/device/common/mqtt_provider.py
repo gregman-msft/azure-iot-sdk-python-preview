@@ -137,11 +137,11 @@ class MQTTProvider(object):
 
         if x509 is not None:
             logger.info("configuring SSL context with client-side certificate and key")
-            ssl_context.load_cert_chain(x509._cert, x509._key, x509._pass_phrase)
+            ssl_context.load_cert_chain(x509.certificate, x509.key, x509.pass_phrase)
 
         return ssl_context
 
-    def connect(self, password=None, x509=None):
+    def connect(self, password=None, client_certificate=None):
         """
         Connect to the MQTT broker, using hostname and username set at instantiation.
 
@@ -149,11 +149,11 @@ class MQTTProvider(object):
         One of the parameters out of password and x509 must be present to ensure a successful connection.
 
         :param str password: The password for connecting with the MQTT broker.
-        :param x509: The x509 certificate. If present then the SSLContext is created using x509.
+        :param client_certificate: The x509 certificate. If present then the SSLContext is created using x509.
         """
         logger.info("connecting to mqtt broker")
 
-        ssl_context = self._create_ssl_context(x509)
+        ssl_context = self._create_ssl_context(client_certificate)
         self._mqtt_client.tls_set_context(context=ssl_context)
         self._mqtt_client.tls_insecure_set(False)
         self._mqtt_client.username_pw_set(username=self._username, password=password)

@@ -26,7 +26,7 @@ class PipelineOperation(object):
       stage, but this functionality will be revamped shortly.
     :type needs_connection: Boolean
     :ivar error: The presence of a value in the error attribute indicates that the operation failed,
-      absense of this value indicates that the operation either succeeded or hasn't been handled yet.
+      absence of this value indicates that the operation either succeeded or hasn't been handled yet.
     :type error: Error
     """
 
@@ -144,7 +144,8 @@ class DisableFeature(PipelineOperation):
 class SetSasToken(PipelineOperation):
     """
     A PipelineOperation object which contains a SAS token used for connecting.  This operation was likely initiated
-    by a pipeline stage that knows how to generate SAS tokens based on some other operation (such as SetSecurityClient)
+    by a pipeline stage that knows how to generate SAS tokens based on some other operation (such as SetAuthProvider
+    or SetSecurityClient)
 
     This operation is in the group of base operations because many different clients use the concept of a SAS token.
 
@@ -166,10 +167,11 @@ class SetSasToken(PipelineOperation):
         self.sas_token = sas_token
 
 
-class SetCertificate(PipelineOperation):
+class SetClientAuthenticationCertificate(PipelineOperation):
     """
-    A PipelineOperation object which contains a certificate used for connecting.  This operation was likely initiated
-    by a pipeline stage that knows how to generate certificates based on some other operation (such as SetSecurityClient)
+    A PipelineOperation object which contains a client provided certificate used for connecting.  This operation was
+    likely initiated by a pipeline stage that knows how to generate certificates based on some other operation
+    (such as SetAuthProvider or SetSecurityClient)
 
     This operation is in the group of base operations because many different clients use the concept of certificate.
 
@@ -179,7 +181,7 @@ class SetCertificate(PipelineOperation):
 
     def __init__(self, certificate, callback=None):
         """
-        Initializer for SetSasToken objects.
+        Initializer for SetCertificate objects.
 
         :param certificate: The certificate which will be used to authenticate with whatever service
         this pipeline connects with. This certificate has the value as well as the key and
@@ -188,7 +190,7 @@ class SetCertificate(PipelineOperation):
         or has failed.  The callback function must accept A PipelineOperation object which indicates
         the specific operation which has completed or failed.
         """
-        super(SetCertificate, self).__init__(callback=callback)
+        super(SetClientAuthenticationCertificate, self).__init__(callback=callback)
         self.certificate = certificate
 
 

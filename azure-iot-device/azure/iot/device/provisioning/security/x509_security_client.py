@@ -1,3 +1,13 @@
+# --------------------------------------------------------------------------
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License. See License.txt in the project root for
+# license information.
+# --------------------------------------------------------------------------
+"""This module contains a client that is responsible for providing x509 certificates that will eventually establish
+ the authenticity of devices to Device Provisioning Service.
+"""
+
+
 class X509SecurityClient(object):
     """
     An X509 Security Client. This uses the certificate and key provided to authenticate a device
@@ -54,20 +64,3 @@ class X509SecurityClient(object):
         return self._x509
 
 
-class X509(object):
-    """
-    A class with references to the certificate, key, and optional pass-phrase used to authenticate
-    a TLS connection using x509 certificates
-    """
-
-    def __init__(self, cert_file, key_file, pass_phrase=None):
-        """
-        Initializer for X509 Certificate
-        :param cert_file: The file path to contents of the certificate (or certificate chain)
-         used to authenticate the device.
-        :param key_file: The file path to the key associated with the certificate
-        :param pass_phrase: (optional) The pass_phrase used to encode the key file
-        """
-        self._cert = cert_file
-        self._key = key_file
-        self._pass_phrase = pass_phrase

@@ -28,7 +28,7 @@ class Provider(PipelineStage):
             self.client_id = op.client_id
             self.ca_cert = op.ca_cert
             self.sas_token = None
-            self.certificate = None
+            self.trusted_certificate_chain = None
             self.provider = MQTTProvider(
                 client_id=self.client_id,
                 hostname=self.hostname,
@@ -47,10 +47,10 @@ class Provider(PipelineStage):
             self.sas_token = op.sas_token
             self.complete_op(op)
 
-        elif isinstance(op, pipeline_ops_base.SetCertificate):
-            # When we get a sas token from above, we just save it for later
+        elif isinstance(op, pipeline_ops_base.SetClientAuthenticationCertificate):
+            # When we get a certificate from above, we just save it for later
             logger.info("{}({}): got certificate".format(self.name, op.name))
-            self.certificate = op.certificate
+            self.trusted_certificate_chain = op.certificate
             self.complete_op(op)
 
         elif isinstance(op, pipeline_ops_base.Connect):
@@ -90,7 +90,7 @@ class Provider(PipelineStage):
             #
             self.provider.on_mqtt_connected = on_connected
             try:
-                self.provider.connect(self.sas_token, self.certificate)
+                self.provider.connect(password=self.sas_token, client_certificate=self.trusted_certificate_chain)
             except Exception as e:
                 self.provider.on_mqtt_connected = self.on_connected
                 raise e
@@ -107,7 +107,7 @@ class Provider(PipelineStage):
             # See "A note on exception handling" above
             self.provider.on_mqtt_connected = on_connected
             try:
-                self.provider.connect(self.sas_token, self.certificate)
+                self.provider.reconnect(self.sas_token)
             except Exception as e:
                 self.provider.on_mqtt_connected = self.on_connected
                 raise e

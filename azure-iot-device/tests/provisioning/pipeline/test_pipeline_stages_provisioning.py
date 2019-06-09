@@ -38,7 +38,7 @@ fake_sas_token = "horcrux_token"
 
 @pytest.fixture
 def mock_stage(mocker):
-    return make_mock_stage(mocker, pipeline_stages_provisioning.UseSymmetricKeySecurityClient)
+    return make_mock_stage(mocker, pipeline_stages_provisioning.UseSymmetricKeyOrX509SecurityClient)
 
 
 def mock_symmetric_security_client(mocker):
@@ -72,7 +72,7 @@ def set_security_client(mocker, callback):
 class TestUseSymmetricKeySecurityClientInitializer(object):
     @pytest.mark.it("Sets name, next, previous and pipeline root attributes on instantiation")
     def test_initializer(self):
-        obj = pipeline_stages_provisioning.UseSymmetricKeySecurityClient()
+        obj = pipeline_stages_provisioning.UseSymmetricKeyOrX509SecurityClient()
         assert_default_stage_attributes(obj)
 
 
@@ -108,7 +108,7 @@ class TestUseSymmetricKeySecurityClientRunOpWithSetSymmetricKeySecurityClient(ob
         mock_stage.run_op(set_security_client)
         assert mock_stage.next._run_op.call_count == 1
         set_args = mock_stage.next._run_op.call_args[0][0]
-        assert isinstance(set_args, pipeline_ops_provisioning.SetSymmetricKeySecurityClientArgs)
+        assert isinstance(set_args, pipeline_ops_provisioning.SetSecurityClientArgs)
 
     @pytest.mark.it(
         "calls the SetSymmetricKeySecurityClient callback with the SetSymmetricKeySecurityClientArgs error"
@@ -146,7 +146,7 @@ class TestUseSymmetricKeySecurityClientRunOpWithSetSymmetricKeySecurityClient(ob
     )
     def test_runs_set_sas_token(self, mocker, mock_stage, set_security_client):
         def next_run_op(self, op):
-            if isinstance(op, pipeline_ops_provisioning.SetSymmetricKeySecurityClientArgs):
+            if isinstance(op, pipeline_ops_provisioning.SetSecurityClientArgs):
                 op.callback(op)
             else:
                 pass
@@ -157,7 +157,7 @@ class TestUseSymmetricKeySecurityClientRunOpWithSetSymmetricKeySecurityClient(ob
         assert mock_stage.next._run_op.call_count == 2
         assert isinstance(
             mock_stage.next._run_op.call_args_list[0][0][0],
-            pipeline_ops_provisioning.SetSymmetricKeySecurityClientArgs,
+            pipeline_ops_provisioning.SetSecurityClientArgs,
         )
         assert isinstance(
             mock_stage.next._run_op.call_args_list[1][0][0], pipeline_ops_base.SetSasToken
@@ -204,7 +204,7 @@ class TestUseSymmetricKeySecurityClientRunOpWithSetSymmetricKeySecurityClient(ob
     )
     def test_returns_set_sas_token_failure(self, fake_exception, mock_stage, set_security_client):
         def next_run_op(self, op):
-            if isinstance(op, pipeline_ops_provisioning.SetSymmetricKeySecurityClientArgs):
+            if isinstance(op, pipeline_ops_provisioning.SetSecurityClientArgs):
                 op.callback(op)
             else:
                 raise fake_exception

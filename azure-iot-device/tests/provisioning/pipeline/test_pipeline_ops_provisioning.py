@@ -54,7 +54,7 @@ class TestSetSymmetricKeySecurityClientArgs(object):
         "registration_id, id_scope, callback on instantiation"
     )
     def test_required_arguments(self):
-        obj = pipeline_ops_provisioning.SetSymmetricKeySecurityClientArgs(
+        obj = pipeline_ops_provisioning.SetSecurityClientArgs(
             provisioning_host=fake_provisioning_host,
             registration_id=fake_registration_id,
             id_scope=fake_id_scope,
@@ -67,7 +67,7 @@ class TestSetSymmetricKeySecurityClientArgs(object):
 
     @pytest.mark.it("Sets callback attribute if provided on instantiation")
     def test_optional_arguments(self):
-        obj = pipeline_ops_provisioning.SetSymmetricKeySecurityClientArgs(
+        obj = pipeline_ops_provisioning.SetSecurityClientArgs(
             provisioning_host=fake_provisioning_host,
             registration_id=fake_registration_id,
             id_scope=fake_id_scope,

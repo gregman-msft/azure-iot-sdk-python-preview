@@ -68,10 +68,11 @@ class TestConnect:
         mock_provisioning_pipeline.connect()
 
         assert mock_mqtt_provider.connect.call_count == 1
-        "SharedAccessSignature" in mock_mqtt_provider.connect.call_args[0][0]
-        assert "skn=registration" in mock_mqtt_provider.connect.call_args[0][0]
-        assert fake_id_scope in mock_mqtt_provider.connect.call_args[0][0]
-        assert fake_registration_id in mock_mqtt_provider.connect.call_args[0][0]
+        "SharedAccessSignature" in mock_mqtt_provider.connect.call_args[1]["password"]
+        assert "skn=registration" in mock_mqtt_provider.connect.call_args[1]["password"]
+        assert fake_id_scope in mock_mqtt_provider.connect.call_args[1]["password"]
+        assert fake_registration_id in mock_mqtt_provider.connect.call_args[1]["password"]
+        assert mock_mqtt_provider.connect.call_args[1]["client_certificate"] is None
 
         mock_mqtt_provider.on_mqtt_connected()
 
@@ -97,10 +98,11 @@ class TestConnect:
         mock_mqtt_provider.on_mqtt_connected()
 
         assert mock_mqtt_provider.connect.call_count == 1
-        "SharedAccessSignature" in mock_mqtt_provider.connect.call_args[0][0]
-        assert "skn=registration" in mock_mqtt_provider.connect.call_args[0][0]
-        assert fake_id_scope in mock_mqtt_provider.connect.call_args[0][0]
-        assert fake_registration_id in mock_mqtt_provider.connect.call_args[0][0]
+        "SharedAccessSignature" in mock_mqtt_provider.connect.call_args[1]["password"]
+        assert "skn=registration" in mock_mqtt_provider.connect.call_args[1]["password"]
+        assert fake_id_scope in mock_mqtt_provider.connect.call_args[1]["password"]
+        assert fake_registration_id in mock_mqtt_provider.connect.call_args[1]["password"]
+        assert mock_mqtt_provider.connect.call_args[1]["client_certificate"] is None
 
         mock_provisioning_pipeline.on_provisioning_pipeline_connected.assert_called_once_with(
             "connected"
@@ -140,10 +142,11 @@ class TestSendRegister:
         )
 
         assert mock_mqtt_provider.connect.call_count == 1
-        "SharedAccessSignature" in mock_mqtt_provider.connect.call_args[0][0]
-        assert "skn=registration" in mock_mqtt_provider.connect.call_args[0][0]
-        assert fake_id_scope in mock_mqtt_provider.connect.call_args[0][0]
-        assert fake_registration_id in mock_mqtt_provider.connect.call_args[0][0]
+        "SharedAccessSignature" in mock_mqtt_provider.connect.call_args[1]["password"]
+        assert "skn=registration" in mock_mqtt_provider.connect.call_args[1]["password"]
+        assert fake_id_scope in mock_mqtt_provider.connect.call_args[1]["password"]
+        assert fake_registration_id in mock_mqtt_provider.connect.call_args[1]["password"]
+        assert mock_mqtt_provider.connect.call_args[1]["client_certificate"] is None
 
         fake_publish_topic = "$dps/registrations/PUT/iotdps-register/?$rid={}".format(
             fake_request_id
@@ -166,10 +169,11 @@ class TestSendRegister:
 
         # verify that we called connect
         assert mock_mqtt_provider.connect.call_count == 1
-        "SharedAccessSignature" in mock_mqtt_provider.connect.call_args[0][0]
-        assert "skn=registration" in mock_mqtt_provider.connect.call_args[0][0]
-        assert fake_id_scope in mock_mqtt_provider.connect.call_args[0][0]
-        assert fake_registration_id in mock_mqtt_provider.connect.call_args[0][0]
+        "SharedAccessSignature" in mock_mqtt_provider.connect.call_args[1]["password"]
+        assert "skn=registration" in mock_mqtt_provider.connect.call_args[1]["password"]
+        assert fake_id_scope in mock_mqtt_provider.connect.call_args[1]["password"]
+        assert fake_registration_id in mock_mqtt_provider.connect.call_args[1]["password"]
+        assert mock_mqtt_provider.connect.call_args[1]["client_certificate"] is None
 
         # verify that we're not connected yet and verify that we havent't published yet
         mock_provisioning_pipeline.on_provisioning_pipeline_connected.assert_not_called()
@@ -199,10 +203,11 @@ class TestSendRegister:
         # start connecting and verify that we've called into the provider
         mock_provisioning_pipeline.connect()
         assert mock_mqtt_provider.connect.call_count == 1
-        "SharedAccessSignature" in mock_mqtt_provider.connect.call_args[0][0]
-        assert "skn=registration" in mock_mqtt_provider.connect.call_args[0][0]
-        assert fake_id_scope in mock_mqtt_provider.connect.call_args[0][0]
-        assert fake_registration_id in mock_mqtt_provider.connect.call_args[0][0]
+        "SharedAccessSignature" in mock_mqtt_provider.connect.call_args[1]["password"]
+        assert "skn=registration" in mock_mqtt_provider.connect.call_args[1]["password"]
+        assert fake_id_scope in mock_mqtt_provider.connect.call_args[1]["password"]
+        assert fake_registration_id in mock_mqtt_provider.connect.call_args[1]["password"]
+        assert mock_mqtt_provider.connect.call_args[1]["client_certificate"] is None
 
         # send an event
         mock_provisioning_pipeline.send_request(
@@ -294,10 +299,11 @@ class TestSendQuery:
         )
 
         assert mock_mqtt_provider.connect.call_count == 1
-        "SharedAccessSignature" in mock_mqtt_provider.connect.call_args[0][0]
-        assert "skn=registration" in mock_mqtt_provider.connect.call_args[0][0]
-        assert fake_id_scope in mock_mqtt_provider.connect.call_args[0][0]
-        assert fake_registration_id in mock_mqtt_provider.connect.call_args[0][0]
+        "SharedAccessSignature" in mock_mqtt_provider.connect.call_args[1]["password"]
+        assert "skn=registration" in mock_mqtt_provider.connect.call_args[1]["password"]
+        assert fake_id_scope in mock_mqtt_provider.connect.call_args[1]["password"]
+        assert fake_registration_id in mock_mqtt_provider.connect.call_args[1]["password"]
+        assert mock_mqtt_provider.connect.call_args[1]["client_certificate"] is None
 
         fake_publish_topic = "$dps/registrations/GET/iotdps-get-operationstatus/?$rid={}&operationId={}".format(
             fake_request_id, fake_operation_id

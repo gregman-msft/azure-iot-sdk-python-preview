@@ -9,7 +9,9 @@
 
 import os
 import logging
-from azure.iot.device import X509SecurityClient, X509
+
+from azure.iot.device import X509SecurityClient
+from azure.iot.device.common import X509
 from azure.iot.device import X509ProvisioningDeviceClient
 
 

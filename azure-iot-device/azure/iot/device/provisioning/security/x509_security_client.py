@@ -62,5 +62,3 @@ class X509SecurityClient(object):
          cert (either the root certificate or one of the intermediate CA certificates).
         """
         return self._x509
-
-

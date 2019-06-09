@@ -33,5 +33,5 @@ pipeline_data_object_test.add_operation_test(
     module=this_module,
     positional_arguments=["request_id", "operation_id", "request_payload"],
     keyword_arguments={"callback": None},
-   extra_defaults={"needs_connection": True},
+    extra_defaults={"needs_connection": True},
 )

@@ -68,7 +68,7 @@ def set_security_client(mocker, callback):
 
 
 @pytest.mark.describe("UseSymmetricKeySecurityClient initializer")
-class TestUseSymmetricKeySecurityClientInitializer(object):
+class TestUseSymmetricKeyOrX509SecurityClientInitializer(object):
     @pytest.mark.it("Sets name, next, previous and pipeline root attributes on instantiation")
     def test_initializer(self):
         obj = pipeline_stages_provisioning.UseSymmetricKeyOrX509SecurityClient()
@@ -82,7 +82,7 @@ unknown_ops = all_except(
 
 
 @pytest.mark.describe("UseSymmetricKeySecurityClient run_op function with unhandled operations")
-class TestUseSymmetricKeySecurityClientRunOpWithUnknownOperation(object):
+class TestUseSymmetricKeyOrX509SecurityClientRunOpWithUnknownOperation(object):
     @pytest.mark.parametrize(
         "op_init,op_init_args", unknown_ops, ids=[x[0].__name__ for x in unknown_ops]
     )
@@ -100,7 +100,7 @@ class TestUseSymmetricKeySecurityClientRunOpWithUnknownOperation(object):
 @pytest.mark.describe(
     "UseSymmetricKeySecurityClient run_op function with SetSymmetricKeySecurityClientArgs operations"
 )
-class TestUseSymmetricKeySecurityClientRunOpWithSetSymmetricKeySecurityClient(object):
+class TestUseSymmetricKeyOrX509SecurityClientRunOpWithSetSecurityClient(object):
     @pytest.mark.it("runs SetSymmetricKeySecurityClientArgs op on the next stage")
     def test_runs_set_symmetric_security_client_args(self, mocker, mock_stage, set_security_client):
         mock_stage.next._run_op = mocker.Mock()
@@ -110,8 +110,8 @@ class TestUseSymmetricKeySecurityClientRunOpWithSetSymmetricKeySecurityClient(ob
         assert isinstance(set_args, pipeline_ops_provisioning.SetSecurityClientArgs)
 
     @pytest.mark.it(
-        "calls the SetSymmetricKeySecurityClient callback with the SetSymmetricKeySecurityClientArgs error"
-        "when the SetSymmetricKeySecurityClientArgs op raises an Exception"
+        "calls the SetSymmetricKeySecurityClient callback with the SetSecurityClientArgs error"
+        "when the SetSecurityClientArgs op raises an Exception"
     )
     def test_set_security_client_raises_exception(
         self, mocker, mock_stage, fake_exception, set_security_client

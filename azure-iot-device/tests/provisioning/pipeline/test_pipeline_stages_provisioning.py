@@ -7,6 +7,7 @@ import logging
 import pytest
 import functools
 from azure.iot.device.provisioning.security.sk_security_client import SymmetricKeySecurityClient
+from azure.iot.device.provisioning.security.x509_security_client import X509SecurityClient
 from azure.iot.device.provisioning.pipeline import (
     pipeline_stages_provisioning,
     pipeline_ops_provisioning,
@@ -32,7 +33,53 @@ fake_registration_id = "registered_remembrall"
 fake_provisioning_host = "hogwarts.com"
 fake_id_scope = "weasley_wizard_wheezes"
 fake_ca_cert = "fake_certificate"
-fake_sas_token = "horcrux_token"
+fake_x509_cert_value = "fantastic_beasts"
+fake_x509_cert_key = "where_to_find_them"
+fake_pass_phrase = "alohomora"
+fake_symmetric_key = "Zm9vYmFy"
+
+
+def create_symmetric_security_client():
+    return SymmetricKeySecurityClient(
+        provisioning_host=fake_provisioning_host,
+        registration_id=fake_registration_id,
+        id_scope=fake_id_scope,
+        symmetric_key=fake_symmetric_key,
+    )
+
+
+class FakeX509(object):
+    def __init__(self, cert, key, pass_phrase):
+        self.certificate = cert
+        self.key = key
+        self.pass_phrase = pass_phrase
+
+
+def mock_x509():
+    return FakeX509(fake_x509_cert_value, fake_x509_cert_key, fake_pass_phrase)
+
+
+def create_x509_security_client():
+    return X509SecurityClient(
+        provisioning_host=fake_provisioning_host,
+        registration_id=fake_registration_id,
+        id_scope=fake_id_scope,
+        x509=mock_x509,
+    )
+
+
+set_security_ops = [
+    {
+        "name": "set symmetric key security",
+        "op_class": pipeline_ops_provisioning.SetSymmetricKeySecurityClient,
+        "op_init_kwargs": {"security_client": create_symmetric_security_client()},
+    },
+    {
+        "name": "set x509 security",
+        "op_class": pipeline_ops_provisioning.SetX509SecurityClient,
+        "op_init_kwargs": {"security_client": create_x509_security_client()},
+    },
+]
 
 
 @pytest.fixture
@@ -40,34 +87,16 @@ def mock_stage(mocker):
     return make_mock_stage(mocker, pipeline_stages_provisioning.UseSymmetricKeyOrX509SecurityClient)
 
 
-def mock_symmetric_security_client(mocker):
-    class MockSymmetricKeySecurityClient(SymmetricKeySecurityClient):
-        def provisioning_host(self):
-            return fake_provisioning_host
-
-        def id_scope(self):
-            return fake_id_scope
-
-        def registration_id(self):
-            return fake_registration_id
-
-    security_client = MockSymmetricKeySecurityClient(
-        fake_provisioning_host, fake_registration_id, fake_sas_token, fake_id_scope
-    )
-    security_client.get_current_sas_token = mocker.Mock(return_value=fake_sas_token)
-    return security_client
-
-
 @pytest.fixture
-def set_security_client(mocker, callback):
+def set_security_client(callback):
     op = pipeline_ops_provisioning.SetSymmetricKeySecurityClient(
-        security_client=mock_symmetric_security_client(mocker)
+        security_client=create_symmetric_security_client()
     )
     op.callback = callback
     return op
 
 
-@pytest.mark.describe("UseSymmetricKeySecurityClient initializer")
+@pytest.mark.describe("UseSymmetricKeyOrX509SecurityClient initializer")
 class TestUseSymmetricKeyOrX509SecurityClientInitializer(object):
     @pytest.mark.it("Sets name, next, previous and pipeline root attributes on instantiation")
     def test_initializer(self):
@@ -81,7 +110,9 @@ unknown_ops = all_except(
 )
 
 
-@pytest.mark.describe("UseSymmetricKeySecurityClient run_op function with unhandled operations")
+@pytest.mark.describe(
+    "UseSymmetricKeyOrX509SecurityClient run_op function with unhandled operations"
+)
 class TestUseSymmetricKeyOrX509SecurityClientRunOpWithUnknownOperation(object):
     @pytest.mark.parametrize(
         "op_init,op_init_args", unknown_ops, ids=[x[0].__name__ for x in unknown_ops]
@@ -98,7 +129,7 @@ class TestUseSymmetricKeyOrX509SecurityClientRunOpWithUnknownOperation(object):
 
 
 @pytest.mark.describe(
-    "UseSymmetricKeySecurityClient run_op function with SetSymmetricKeySecurityClientArgs operations"
+    "UseSymmetricKeyOrX509SecurityClient run_op function with SetSecurityClientArgs operations"
 )
 class TestUseSymmetricKeyOrX509SecurityClientRunOpWithSetSecurityClient(object):
     @pytest.mark.it("runs SetSymmetricKeySecurityClientArgs op on the next stage")
@@ -165,11 +196,20 @@ class TestUseSymmetricKeyOrX509SecurityClientRunOpWithSetSecurityClient(object):
     @pytest.mark.it(
         "calls get_current_sas_token on the security_client and passes the result as a SetSasToken attribute"
     )
-    def test_calls_get_current_sas_token(self, mock_stage, set_security_client):
+    def test_calls_get_current_sas_token(self, mocker, mock_stage, set_security_client):
+        clear_method_request_spy = mocker.spy(
+            set_security_client.security_client, "get_current_sas_token"
+        )
         mock_stage.run_op(set_security_client)
-        assert set_security_client.security_client.get_current_sas_token.call_count == 1
+
+        assert clear_method_request_spy.call_count == 1
         set_sas_token_op = mock_stage.next._run_op.call_args_list[1][0][0]
-        assert set_sas_token_op.sas_token == fake_sas_token
+
+        assert "SharedAccessSignature" in set_sas_token_op.sas_token
+        assert "skn=registration" in set_sas_token_op.sas_token
+        assert fake_id_scope in set_sas_token_op.sas_token
+        assert fake_registration_id in set_sas_token_op.sas_token
+        # assert set_sas_token_op.sas_token == fake_sas_token
 
     @pytest.mark.it(
         "calls the SetSymmetricKeySecurityClient callback with no error when the SetSasToken operation succeeds"

@@ -7,6 +7,7 @@
 import pytest
 from mock import MagicMock, patch
 from azure.iot.device.provisioning.security.sk_security_client import SymmetricKeySecurityClient
+from azure.iot.device.provisioning.security.x509_security_client import X509SecurityClient
 from azure.iot.device.provisioning.pipeline.provisioning_pipeline import ProvisioningPipeline
 
 send_msg_qos = 1
@@ -26,10 +27,32 @@ fake_request_id = "fake_request_1234"
 fake_mqtt_payload = "hello hogwarts"
 fake_operation_id = "fake_operation_9876"
 fake_sub_unsub_topic = "$dps/registrations/res/#"
+fake_x509_cert_value = "fantastic_beasts"
+fake_x509_cert_key = "where_to_find_them"
+fake_pass_phrase = "alohomora"
 
 
-@pytest.fixture(scope="function")
-def security_client():
+class FakeX509(object):
+    def __init__(self, cert, key, pass_phrase):
+        self.certificate = cert
+        self.key = key
+        self.pass_phrase = pass_phrase
+
+
+def mock_x509():
+    return FakeX509(fake_x509_cert_value, fake_x509_cert_key, fake_pass_phrase)
+
+
+def create_x509_security_client():
+    return X509SecurityClient(
+        provisioning_host=fake_provisioning_host,
+        registration_id=fake_registration_id,
+        id_scope=fake_id_scope,
+        x509=mock_x509,
+    )
+
+
+def create_symmetric_key_security_client():
     return SymmetricKeySecurityClient(
         provisioning_host=fake_provisioning_host,
         registration_id=fake_registration_id,
@@ -38,17 +61,71 @@ def security_client():
     )
 
 
-@pytest.fixture(scope="function")
-def sas_token(security_client):
-    return security_client.get_current_sas_token()
+#
+# @pytest.fixture
+# def get_sas_token():
+#     sec_client = create_symmetric_key_security_client()
+#     return sec_client.get_current_sas_token()
+#
+#
+# @pytest.fixture
+# def get_x509_cert():
+#     sec_client = create_x509_security_client()
+#     return sec_client.get_x509_certificate()
+
+
+different_security_clients = [
+    pytest.param(
+        {
+            "client_class": SymmetricKeySecurityClient,
+            "init_kwargs": {
+                "provisioning_host": fake_provisioning_host,
+                "registration_id": fake_registration_id,
+                "id_scope": fake_id_scope,
+                "symmetric_key": fake_symmetric_key,
+            },
+        },
+        id="Symmetric",
+    ),
+    pytest.param(
+        {
+            "client_class": X509SecurityClient,
+            "init_kwargs": {
+                "provisioning_host": fake_provisioning_host,
+                "registration_id": fake_registration_id,
+                "id_scope": fake_id_scope,
+                "x509": mock_x509(),
+            },
+        },
+        id="X509",
+    ),
+]
+
+
+def assert_for_symmetric_key(password):
+    password is not None
+    "SharedAccessSignature" in password
+    assert "skn=registration" in password
+    assert fake_id_scope in password
+    assert fake_registration_id in password
+
+
+def assert_for_client_x509(x509):
+    x509 is not None
+    assert x509.certificate == fake_x509_cert_value
+    assert x509.key == fake_x509_cert_key
+    assert x509.pass_phrase == fake_pass_phrase
 
 
 @pytest.fixture(scope="function")
-def mock_provisioning_pipeline(security_client):
+def mock_provisioning_pipeline(params_security_clients):
+    input_security_client = params_security_clients["client_class"](
+        **params_security_clients["init_kwargs"]
+    )
     with patch(
         "azure.iot.device.provisioning.pipeline.provisioning_pipeline.pipeline_stages_mqtt.MQTTProvider"
     ):
-        provisioning_pipeline = ProvisioningPipeline(security_client)
+        provisioning_pipeline = ProvisioningPipeline(input_security_client)
     provisioning_pipeline.on_provisioning_pipeline_connected = MagicMock()
     provisioning_pipeline.on_provisioning_pipeline_disconnected = MagicMock()
     provisioning_pipeline.on_provisioning_pipeline_message_received = MagicMock()
@@ -56,26 +133,42 @@ def mock_provisioning_pipeline(security_client):
     provisioning_pipeline.disconnect()
 
 
-class TestInstantiation(object):
-    def test_instantiates_correctly(self, security_client):
-        provisioning_pipeline = ProvisioningPipeline(security_client)
+class TestInit(object):
+    @pytest.mark.parametrize(
+        "input_security_client",
+        [
+            pytest.param(create_symmetric_key_security_client(), id="Symmetric Key"),
+            pytest.param(create_x509_security_client(), id="X509 Certificate"),
+        ],
+    )
+    @pytest.mark.it("happens correctly with the specific security client")
+    def test_instantiates_correctly(self, input_security_client):
+        provisioning_pipeline = ProvisioningPipeline(input_security_client)
         assert provisioning_pipeline._pipeline is not None
 
 
+@pytest.mark.parametrize("params_security_clients", different_security_clients)
+@pytest.mark.describe("Provisioning pipeline - Connect")
 class TestConnect:
-    def test_connect_calls_connect_on_provider(self, mocker, mock_provisioning_pipeline, sas_token):
+    @pytest.mark.it("calls connect on provider")
+    def test_connect_calls_connect_on_provider(
+        self, params_security_clients, mock_provisioning_pipeline
+    ):
         mock_mqtt_provider = mock_provisioning_pipeline._pipeline.provider
         mock_provisioning_pipeline.connect()
 
         assert mock_mqtt_provider.connect.call_count == 1
-        "SharedAccessSignature" in mock_mqtt_provider.connect.call_args[1]["password"]
-        assert "skn=registration" in mock_mqtt_provider.connect.call_args[1]["password"]
-        assert fake_id_scope in mock_mqtt_provider.connect.call_args[1]["password"]
-        assert fake_registration_id in mock_mqtt_provider.connect.call_args[1]["password"]
-        assert mock_mqtt_provider.connect.call_args[1]["client_certificate"] is None
+
+        if params_security_clients["client_class"].__name__ == "SymmetricKeySecurityClient":
+            assert mock_mqtt_provider.connect.call_args[1]["password"] is not None
+            assert_for_symmetric_key(mock_mqtt_provider.connect.call_args[1]["password"])
+        elif params_security_clients["client_class"].__name__ == "X509SecurityClient":
+            assert mock_mqtt_provider.connect.call_args[1]["client_certificate"] is not None
+            assert_for_client_x509(mock_mqtt_provider.connect.call_args[1]["client_certificate"])
 
         mock_mqtt_provider.on_mqtt_connected()
 
+    @pytest.mark.it("after complete calls handler with new state")
     def test_connected_state_handler_called_wth_new_state_once_provider_gets_connected(
         self, mock_provisioning_pipeline
     ):
@@ -88,8 +181,9 @@ class TestConnect:
             "connected"
         )
 
+    @pytest.mark.it("is ignored if waiting for completion of previous one")
     def test_connect_ignored_if_waiting_for_connect_complete(
-        self, mock_provisioning_pipeline, sas_token
+        self, mock_provisioning_pipeline, params_security_clients
     ):
         mock_mqtt_provider = mock_provisioning_pipeline._pipeline.provider
 
@@ -98,16 +192,19 @@ class TestConnect:
         mock_mqtt_provider.on_mqtt_connected()
 
         assert mock_mqtt_provider.connect.call_count == 1
-        "SharedAccessSignature" in mock_mqtt_provider.connect.call_args[1]["password"]
-        assert "skn=registration" in mock_mqtt_provider.connect.call_args[1]["password"]
-        assert fake_id_scope in mock_mqtt_provider.connect.call_args[1]["password"]
-        assert fake_registration_id in mock_mqtt_provider.connect.call_args[1]["password"]
-        assert mock_mqtt_provider.connect.call_args[1]["client_certificate"] is None
+
+        if params_security_clients["client_class"].__name__ == "SymmetricKeySecurityClient":
+            assert mock_mqtt_provider.connect.call_args[1]["password"] is not None
+            assert_for_symmetric_key(mock_mqtt_provider.connect.call_args[1]["password"])
+        elif params_security_clients["client_class"].__name__ == "X509SecurityClient":
+            assert mock_mqtt_provider.connect.call_args[1]["client_certificate"] is not None
+            assert_for_client_x509(mock_mqtt_provider.connect.call_args[1]["client_certificate"])
 
         mock_provisioning_pipeline.on_provisioning_pipeline_connected.assert_called_once_with(
             "connected"
         )
 
+    @pytest.mark.it("is ignored if waiting for completion of send")
     def test_connect_ignored_if_waiting_for_send_complete(self, mock_provisioning_pipeline):
         mock_mqtt_provider = mock_provisioning_pipeline._pipeline.provider
 
@@ -131,8 +228,12 @@ class TestConnect:
         mock_provisioning_pipeline.on_provisioning_pipeline_connected.assert_not_called()
 
 
+@pytest.mark.parametrize("params_security_clients", different_security_clients)
+@pytest.mark.describe("Provisioning pipeline - Send Register")
 class TestSendRegister:
-    def test_send_request_calls_publish_on_provider(self, mock_provisioning_pipeline, sas_token):
+    def test_send_request_calls_publish_on_provider(
+        self, mock_provisioning_pipeline, params_security_clients
+    ):
         mock_mqtt_provider = mock_provisioning_pipeline._pipeline.provider
 
         mock_provisioning_pipeline.connect()
@@ -142,11 +243,13 @@ class TestSendRegister:
         )
 
         assert mock_mqtt_provider.connect.call_count == 1
-        "SharedAccessSignature" in mock_mqtt_provider.connect.call_args[1]["password"]
-        assert "skn=registration" in mock_mqtt_provider.connect.call_args[1]["password"]
-        assert fake_id_scope in mock_mqtt_provider.connect.call_args[1]["password"]
-        assert fake_registration_id in mock_mqtt_provider.connect.call_args[1]["password"]
-        assert mock_mqtt_provider.connect.call_args[1]["client_certificate"] is None
+
+        if params_security_clients["client_class"].__name__ == "SymmetricKeySecurityClient":
+            assert mock_mqtt_provider.connect.call_args[1]["password"] is not None
+            assert_for_symmetric_key(mock_mqtt_provider.connect.call_args[1]["password"])
+        elif params_security_clients["client_class"].__name__ == "X509SecurityClient":
+            assert mock_mqtt_provider.connect.call_args[1]["client_certificate"] is not None
+            assert_for_client_x509(mock_mqtt_provider.connect.call_args[1]["client_certificate"])
 
         fake_publish_topic = "$dps/registrations/PUT/iotdps-register/?$rid={}".format(
             fake_request_id
@@ -158,7 +261,7 @@ class TestSendRegister:
 
     #
     def test_send_request_queues_and_connects_before_sending(
-        self, mock_provisioning_pipeline, sas_token
+        self, mock_provisioning_pipeline, params_security_clients
     ):
         mock_mqtt_provider = mock_provisioning_pipeline._pipeline.provider
 
@@ -169,11 +272,13 @@ class TestSendRegister:
 
         # verify that we called connect
         assert mock_mqtt_provider.connect.call_count == 1
-        "SharedAccessSignature" in mock_mqtt_provider.connect.call_args[1]["password"]
-        assert "skn=registration" in mock_mqtt_provider.connect.call_args[1]["password"]
-        assert fake_id_scope in mock_mqtt_provider.connect.call_args[1]["password"]
-        assert fake_registration_id in mock_mqtt_provider.connect.call_args[1]["password"]
-        assert mock_mqtt_provider.connect.call_args[1]["client_certificate"] is None
+
+        if params_security_clients["client_class"].__name__ == "SymmetricKeySecurityClient":
+            assert mock_mqtt_provider.connect.call_args[1]["password"] is not None
+            assert_for_symmetric_key(mock_mqtt_provider.connect.call_args[1]["password"])
+        elif params_security_clients["client_class"].__name__ == "X509SecurityClient":
+            assert mock_mqtt_provider.connect.call_args[1]["client_certificate"] is not None
+            assert_for_client_x509(mock_mqtt_provider.connect.call_args[1]["client_certificate"])
 
         # verify that we're not connected yet and verify that we havent't published yet
         mock_provisioning_pipeline.on_provisioning_pipeline_connected.assert_not_called()
@@ -196,18 +301,20 @@ class TestSendRegister:
         assert mock_mqtt_provider.publish.call_args[1]["payload"] == fake_mqtt_payload
 
     def test_send_request_queues_if_waiting_for_connect_complete(
-        self, mock_provisioning_pipeline, sas_token
+        self, mock_provisioning_pipeline, params_security_clients
     ):
         mock_mqtt_provider = mock_provisioning_pipeline._pipeline.provider
 
         # start connecting and verify that we've called into the provider
         mock_provisioning_pipeline.connect()
         assert mock_mqtt_provider.connect.call_count == 1
-        "SharedAccessSignature" in mock_mqtt_provider.connect.call_args[1]["password"]
-        assert "skn=registration" in mock_mqtt_provider.connect.call_args[1]["password"]
-        assert fake_id_scope in mock_mqtt_provider.connect.call_args[1]["password"]
-        assert fake_registration_id in mock_mqtt_provider.connect.call_args[1]["password"]
-        assert mock_mqtt_provider.connect.call_args[1]["client_certificate"] is None
+
+        if params_security_clients["client_class"].__name__ == "SymmetricKeySecurityClient":
+            assert mock_mqtt_provider.connect.call_args[1]["password"] is not None
+            assert_for_symmetric_key(mock_mqtt_provider.connect.call_args[1]["password"])
+        elif params_security_clients["client_class"].__name__ == "X509SecurityClient":
+            assert mock_mqtt_provider.connect.call_args[1]["client_certificate"] is not None
+            assert_for_client_x509(mock_mqtt_provider.connect.call_args[1]["client_certificate"])
 
         # send an event
         mock_provisioning_pipeline.send_request(
@@ -288,8 +395,12 @@ class TestSendRegister:
         mock_mqtt_provider.disconnect.assert_called_once_with()
 
 
+@pytest.mark.parametrize("params_security_clients", different_security_clients)
+@pytest.mark.describe("Provisioning pipeline - Send Query")
 class TestSendQuery:
-    def test_send_query_calls_publish_on_provider(self, mock_provisioning_pipeline, sas_token):
+    def test_send_query_calls_publish_on_provider(
+        self, mock_provisioning_pipeline, params_security_clients
+    ):
         mock_mqtt_provider = mock_provisioning_pipeline._pipeline.provider
 
         mock_provisioning_pipeline.connect()
@@ -301,11 +412,13 @@ class TestSendQuery:
         )
 
         assert mock_mqtt_provider.connect.call_count == 1
-        "SharedAccessSignature" in mock_mqtt_provider.connect.call_args[1]["password"]
-        assert "skn=registration" in mock_mqtt_provider.connect.call_args[1]["password"]
-        assert fake_id_scope in mock_mqtt_provider.connect.call_args[1]["password"]
-        assert fake_registration_id in mock_mqtt_provider.connect.call_args[1]["password"]
-        assert mock_mqtt_provider.connect.call_args[1]["client_certificate"] is None
+
+        if params_security_clients["client_class"].__name__ == "SymmetricKeySecurityClient":
+            assert mock_mqtt_provider.connect.call_args[1]["password"] is not None
+            assert_for_symmetric_key(mock_mqtt_provider.connect.call_args[1]["password"])
+        elif params_security_clients["client_class"].__name__ == "X509SecurityClient":
+            assert mock_mqtt_provider.connect.call_args[1]["client_certificate"] is not None
+            assert_for_client_x509(mock_mqtt_provider.connect.call_args[1]["client_certificate"])
 
         fake_publish_topic = "$dps/registrations/GET/iotdps-get-operationstatus/?$rid={}&operationId={}".format(
             fake_request_id, fake_operation_id
@@ -316,6 +429,8 @@ class TestSendQuery:
         assert mock_mqtt_provider.publish.call_args[1]["payload"] == fake_mqtt_payload
 
 
+@pytest.mark.parametrize("params_security_clients", different_security_clients)
+@pytest.mark.describe("Provisioning pipeline - Disconnect")
 class TestDisconnect:
     def test_disconnect_calls_disconnect_on_provider(self, mock_provisioning_pipeline):
         mock_mqtt_provider = mock_provisioning_pipeline._pipeline.provider
@@ -347,6 +462,8 @@ class TestDisconnect:
         )
 
 
+@pytest.mark.parametrize("params_security_clients", different_security_clients)
+@pytest.mark.describe("Provisioning pipeline - Enable")
 class TestEnable:
     def test_subscribe_calls_subscribe_on_provider(self, mock_provisioning_pipeline):
         mock_mqtt_provider = mock_provisioning_pipeline._pipeline.provider
@@ -359,6 +476,8 @@ class TestEnable:
         assert mock_mqtt_provider.subscribe.call_args[1]["topic"] == fake_sub_unsub_topic
 
 
+@pytest.mark.parametrize("params_security_clients", different_security_clients)
+@pytest.mark.describe("Provisioning pipeline - Disable")
 class TestDisable:
     def test_unsubscribe_calls_unsubscribe_on_provider(self, mock_provisioning_pipeline):
         mock_mqtt_provider = mock_provisioning_pipeline._pipeline.provider

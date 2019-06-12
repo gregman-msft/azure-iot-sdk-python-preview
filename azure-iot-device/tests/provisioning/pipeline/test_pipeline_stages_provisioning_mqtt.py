@@ -72,6 +72,11 @@ unknown_events = all_except(
 )
 
 
+@pytest.fixture(scope="function")
+def some_exception():
+    return Exception("Alohomora")
+
+
 @pytest.fixture
 def mock_stage(mocker):
     return make_mock_stage(mocker, pipeline_stages_provisioning_mqtt.ProvisioningMQTTConverter)
@@ -166,11 +171,11 @@ class TestProvisioningMQTTConverterWithSetAuthProviderArgs(object):
         "calls the SetSymmetricKeySecurityClientArgs callback with error if the SetConnectionArgs operation raises an Exception"
     )
     def test_set_connection_args_raises_exception(
-        self, mock_stage, mocker, fake_exception, set_security_client_args
+        self, mock_stage, mocker, some_exception, set_security_client_args
     ):
-        mock_stage.next._run_op = mocker.Mock(side_effect=fake_exception)
+        mock_stage.next._run_op = mocker.Mock(side_effect=some_exception)
         mock_stage.run_op(set_security_client_args)
-        assert_callback_failed(op=set_security_client_args, error=fake_exception)
+        assert_callback_failed(op=set_security_client_args, error=some_exception)
 
     @pytest.mark.it(
         "Allows any BaseExceptions raised inside the SetConnectionArgs operation to propagate"
@@ -242,11 +247,11 @@ class TestProvisioningMQTTConverterBasicOperations(object):
 
     @pytest.mark.it("calls the original op callback with error if the new_op raises an Exception")
     def test_new_op_raises_exception(
-        self, params, mocker, mock_stage, stages_configured, op, fake_exception
+        self, params, mocker, mock_stage, stages_configured, op, some_exception
     ):
-        mock_stage.next._run_op = mocker.Mock(side_effect=fake_exception)
+        mock_stage.next._run_op = mocker.Mock(side_effect=some_exception)
         mock_stage.run_op(op)
-        assert_callback_failed(op=op, error=fake_exception)
+        assert_callback_failed(op=op, error=some_exception)
 
     @pytest.mark.it("Allows any BaseExceptions raised from inside new_op to propagate")
     def test_new_op_raises_base_exception(

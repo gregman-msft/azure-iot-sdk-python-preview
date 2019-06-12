@@ -38,11 +38,11 @@ class UseSymmetricKeyOrX509SecurityClient(PipelineStage):
     """
 
     def _run_op(self, op):
-        if isinstance(op, pipeline_ops_provisioning.SetSymmetricKeySecurityClient):
+        def pipeline_ops_done(completed_op):
+            op.error = completed_op.error
+            op.callback(op)
 
-            def pipeline_ops_done(completed_op):
-                op.error = completed_op.error
-                op.callback(op)
+        if isinstance(op, pipeline_ops_provisioning.SetSymmetricKeySecurityClient):
 
             security_client = op.security_client
             self.run_ops_serial(
@@ -65,7 +65,7 @@ class UseSymmetricKeyOrX509SecurityClient(PipelineStage):
                 pipeline_ops_base.SetClientAuthenticationCertificate(
                     certificate=security_client.get_x509_certificate()
                 ),
-                callback=op.callback,
+                callback=pipeline_ops_done,
             )
 
         else:

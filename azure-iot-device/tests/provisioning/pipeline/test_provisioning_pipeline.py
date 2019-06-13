@@ -122,7 +122,7 @@ class TestInit(object):
             pytest.param(create_x509_security_client(), id="X509 Certificate"),
         ],
     )
-    @pytest.mark.it("happens correctly with the specific security client")
+    @pytest.mark.it("Happens correctly with the specific security client")
     def test_instantiates_correctly(self, input_security_client):
         provisioning_pipeline = ProvisioningPipeline(input_security_client)
         assert provisioning_pipeline._pipeline is not None
@@ -131,7 +131,7 @@ class TestInit(object):
 @pytest.mark.parametrize("params_security_clients", different_security_clients)
 @pytest.mark.describe("Provisioning pipeline - Connect")
 class TestConnect:
-    @pytest.mark.it("calls connect on provider")
+    @pytest.mark.it("Calls connect on provider")
     def test_connect_calls_connect_on_provider(
         self, params_security_clients, mock_provisioning_pipeline
     ):
@@ -149,7 +149,7 @@ class TestConnect:
 
         mock_mqtt_provider.on_mqtt_connected()
 
-    @pytest.mark.it("after complete calls handler with new state")
+    @pytest.mark.it("After complete calls handler with new state")
     def test_connected_state_handler_called_wth_new_state_once_provider_gets_connected(
         self, mock_provisioning_pipeline
     ):
@@ -162,7 +162,7 @@ class TestConnect:
             "connected"
         )
 
-    @pytest.mark.it("is ignored if waiting for completion of previous one")
+    @pytest.mark.it("Is ignored if waiting for completion of previous one")
     def test_connect_ignored_if_waiting_for_connect_complete(
         self, mock_provisioning_pipeline, params_security_clients
     ):
@@ -185,7 +185,7 @@ class TestConnect:
             "connected"
         )
 
-    @pytest.mark.it("is ignored if waiting for completion of send")
+    @pytest.mark.it("Is ignored if waiting for completion of send")
     def test_connect_ignored_if_waiting_for_send_complete(self, mock_provisioning_pipeline):
         mock_mqtt_provider = mock_provisioning_pipeline._pipeline.provider
 
@@ -240,7 +240,6 @@ class TestSendRegister:
         assert mock_mqtt_provider.publish.call_args[1]["topic"] == fake_publish_topic
         assert mock_mqtt_provider.publish.call_args[1]["payload"] == fake_mqtt_payload
 
-    #
     def test_send_request_queues_and_connects_before_sending(
         self, mock_provisioning_pipeline, params_security_clients
     ):

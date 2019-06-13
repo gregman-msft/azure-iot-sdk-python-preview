@@ -26,7 +26,7 @@ def x509():
 
 @pytest.mark.describe("X509SecurityClient")
 class TestX509SecurityClient(object):
-    @pytest.mark.it("properties have getters")
+    @pytest.mark.it("Properties have getters")
     def test_properties_are_gettable_after_instantiation_security_client(self):
         x509_cert = x509()
         security_client = X509SecurityClient(
@@ -37,7 +37,7 @@ class TestX509SecurityClient(object):
         assert security_client.registration_id == fake_registration_id
         assert security_client.get_x509_certificate() == x509_cert
 
-    @pytest.mark.it("properties do not have setter")
+    @pytest.mark.it("Properties do not have setter")
     def test_properties_are_not_settable_after_instantiation_security_client(self):
         security_client = X509SecurityClient(
             fake_provisioning_host, fake_registration_id, fake_id_scope, x509()

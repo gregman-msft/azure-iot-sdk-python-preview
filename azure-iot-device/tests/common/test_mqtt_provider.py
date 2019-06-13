@@ -149,7 +149,7 @@ class TestConnect(object):
         assert mock_ssl_context.load_verify_locations.call_count == 1
         assert mock_ssl_context.load_verify_locations.call_args == mocker.call(cadata=ca_cert)
 
-    @pytest.mark.it("Configures TLS/SSL context with client provided certificate chain like x509")
+    @pytest.mark.it("Configures TLS/SSL context with client-provided-certificate-chain like x509")
     def test_configures_tls_context_with_client_provided_certificate_chain(
         self, mocker, mock_mqtt_client, provider
     ):
@@ -165,7 +165,9 @@ class TestConnect(object):
         assert mock_ssl_context.load_default_certs.call_count == 1
         assert mock_ssl_context.load_cert_chain.call_count == 1
         assert mock_ssl_context.load_cert_chain.call_args == mocker.call(
-            fake_client_cert.certificate_file, fake_client_cert.key_file, fake_client_cert.pass_phrase
+            fake_client_cert.certificate_file,
+            fake_client_cert.key_file,
+            fake_client_cert.pass_phrase,
         )
 
     @pytest.mark.it("Sets username and password")

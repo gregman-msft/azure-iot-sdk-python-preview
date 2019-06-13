@@ -96,7 +96,7 @@ different_security_clients = [
     different_security_clients,
     ids=[x["name"] for x in different_security_clients],
 )
-@pytest.mark.describe("ProvisioningDeviceClient")
+@pytest.mark.describe("ProvisioningDeviceClient - Init")
 class TestClientCreate:
     xfail_notimplemented = pytest.mark.xfail(raises=NotImplementedError, reason="Unimplemented")
 
@@ -104,7 +104,7 @@ class TestClientCreate:
     def security_client(self, params_security_clients):
         return params_security_clients["security_client"]
 
-    @pytest.mark.it("is created from a chosen security client and protocol")
+    @pytest.mark.it("Is created from a chosen security client and protocol")
     @pytest.mark.parametrize(
         "protocol,expected_pipeline",
         [
@@ -122,7 +122,7 @@ class TestClientCreate:
         )
         assert isinstance(client, params_security_clients["client_class"])
 
-    @pytest.mark.it("raises error on creation if it is not a correct security client")
+    @pytest.mark.it("Raises error on creation if it is not a correct security client")
     def test_raises_when_client_created_from_security_client_with_not_symmetric_security_or_not_x509(
         self, params_security_clients
     ):
@@ -168,12 +168,13 @@ class FakePollingMachineSuccess(PollingMachine):
 @pytest.mark.parametrize(
     "params_clients", different_clients, ids=[x["client_class"].__name__ for x in different_clients]
 )
-class TestClientCallsPollingMachine:
+@pytest.mark.describe("ProvisioningDeviceClient")
+class TestClientRegister(object):
     @pytest.fixture
     def mock_polling_machine_success(self, mocker):
         return mocker.MagicMock(wraps=FakePollingMachineSuccess(mocker.MagicMock()))
 
-    @pytest.mark.it("register calls register on polling machine with passed in callback")
+    @pytest.mark.it("Register calls register on polling machine with passed in callback")
     def test_client_register_success_calls_polling_machine_register_with_callback(
         self, mocker, mock_polling_machine_success, params_clients
     ):
@@ -189,7 +190,7 @@ class TestClientCallsPollingMachine:
         client.register()
         assert mock_polling_machine_success.register.call_count == 1
 
-    @pytest.mark.it("cancel calls cancel on polling machine with passed in callback")
+    @pytest.mark.it("Cancel calls cancel on polling machine with passed in callback")
     def test_client_cancel_calls_polling_machine_cancel_with_callback(
         self, mocker, mock_polling_machine_success, params_clients
     ):

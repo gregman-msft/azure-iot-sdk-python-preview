@@ -19,7 +19,7 @@ expiry = "1539043658"
 
 @pytest.mark.describe("SymmetricKeySecurityClient")
 class TestSymmetricKeySecurityClient(object):
-    @pytest.mark.it("properties have getters")
+    @pytest.mark.it("Properties have getters")
     def test_properties_are_gettable_after_instantiation_security_client(self):
         security_client = SymmetricKeySecurityClient(
             fake_provisioning_host, fake_registration_id, fake_symmetric_key, fake_id_scope
@@ -28,7 +28,7 @@ class TestSymmetricKeySecurityClient(object):
         assert security_client.id_scope == fake_id_scope
         assert security_client.registration_id == fake_registration_id
 
-    @pytest.mark.it("properties do not have setter")
+    @pytest.mark.it("Properties do not have setter")
     def test_properties_are_not_settable_after_instantiation_security_client(self):
         security_client = SymmetricKeySecurityClient(
             fake_provisioning_host, fake_registration_id, fake_symmetric_key, fake_id_scope
@@ -38,7 +38,7 @@ class TestSymmetricKeySecurityClient(object):
             security_client.id_scope = "WhompingWillow"
             security_client.provisioning_host = "hogwarts.com"
 
-    @pytest.mark.it("create sas token")
+    @pytest.mark.it("Can create sas token")
     def test_create_sas(self):
         security_client = SymmetricKeySecurityClient(
             fake_provisioning_host, fake_registration_id, fake_symmetric_key, fake_id_scope

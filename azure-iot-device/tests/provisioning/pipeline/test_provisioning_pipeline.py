@@ -6,6 +6,7 @@
 
 import pytest
 from mock import MagicMock, patch
+from azure.iot.device.common.models import X509
 from azure.iot.device.provisioning.security.sk_security_client import SymmetricKeySecurityClient
 from azure.iot.device.provisioning.security.x509_security_client import X509SecurityClient
 from azure.iot.device.provisioning.pipeline.provisioning_pipeline import ProvisioningPipeline
@@ -27,20 +28,13 @@ fake_request_id = "fake_request_1234"
 fake_mqtt_payload = "hello hogwarts"
 fake_operation_id = "fake_operation_9876"
 fake_sub_unsub_topic = "$dps/registrations/res/#"
-fake_x509_cert_value = "fantastic_beasts"
-fake_x509_cert_key = "where_to_find_them"
+fake_x509_cert_file = "fantastic_beasts"
+fake_x509_cert_key_file = "where_to_find_them"
 fake_pass_phrase = "alohomora"
 
 
-class FakeX509(object):
-    def __init__(self, cert, key, pass_phrase):
-        self.certificate = cert
-        self.key = key
-        self.pass_phrase = pass_phrase
-
-
 def mock_x509():
-    return FakeX509(fake_x509_cert_value, fake_x509_cert_key, fake_pass_phrase)
+    return X509(fake_x509_cert_file, fake_x509_cert_key_file, fake_pass_phrase)
 
 
 def create_x509_security_client():
@@ -99,8 +93,8 @@ def assert_for_symmetric_key(password):
 
 def assert_for_client_x509(x509):
     x509 is not None
-    assert x509.certificate == fake_x509_cert_value
-    assert x509.key == fake_x509_cert_key
+    assert x509.certificate_file == fake_x509_cert_file
+    assert x509.key_file == fake_x509_cert_key_file
     assert x509.pass_phrase == fake_pass_phrase
 
 

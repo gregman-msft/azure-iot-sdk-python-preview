@@ -137,7 +137,7 @@ class MQTTProvider(object):
 
         if x509 is not None:
             logger.info("configuring SSL context with client-side certificate and key")
-            ssl_context.load_cert_chain(x509.certificate, x509.key, x509.pass_phrase)
+            ssl_context.load_cert_chain(x509.certificate_file, x509.key_file, x509.pass_phrase)
 
         return ssl_context
 

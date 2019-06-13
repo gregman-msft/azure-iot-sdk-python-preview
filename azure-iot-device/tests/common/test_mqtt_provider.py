@@ -5,6 +5,7 @@
 # --------------------------------------------------------------------------
 
 from azure.iot.device.common.mqtt_provider import MQTTProvider, OperationManager
+from azure.iot.device.common.models.x509 import X509
 import paho.mqtt.client as mqtt
 import ssl
 import copy
@@ -29,13 +30,6 @@ class DummyException(Exception):
 
 class UnhandledException(BaseException):
     pass
-
-
-class FakeX509(object):
-    def __init__(self, cert, key, pass_phrase):
-        self.certificate = cert
-        self.key = key
-        self.pass_phrase = pass_phrase
 
 
 @pytest.fixture
@@ -161,7 +155,7 @@ class TestConnect(object):
     ):
         mock_ssl_context_constructor = mocker.patch.object(ssl, "SSLContext")
         mock_ssl_context = mock_ssl_context_constructor.return_value
-        fake_client_cert = FakeX509("fantastic_beasts", "where_to_find_them", "alohomora")
+        fake_client_cert = X509("fantastic_beasts", "where_to_find_them", "alohomora")
 
         provider = MQTTProvider(
             client_id=fake_device_id, hostname=fake_hostname, username=fake_username
@@ -171,7 +165,7 @@ class TestConnect(object):
         assert mock_ssl_context.load_default_certs.call_count == 1
         assert mock_ssl_context.load_cert_chain.call_count == 1
         assert mock_ssl_context.load_cert_chain.call_args == mocker.call(
-            fake_client_cert.certificate, fake_client_cert.key, fake_client_cert.pass_phrase
+            fake_client_cert.certificate_file, fake_client_cert.key_file, fake_client_cert.pass_phrase
         )
 
     @pytest.mark.it("Sets username and password")

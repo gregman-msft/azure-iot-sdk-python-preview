@@ -24,7 +24,7 @@ registration_id = os.getenv("DPS_X509_REGISTRATION_ID")
 async def main():
     async def register_device():
         x509_cert = X509(
-            cert_file="../../cert/device_x509.pem", key_file="../../cert/device_x509_key.pem"
+            cert_file=os.getenv("X509_CERT_FILE"), key_file=os.getenv("X509_KEY_FILE")
         )
         x509_security_client = X509SecurityClient(
             provisioning_host, registration_id, id_scope, x509_cert

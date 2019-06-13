@@ -35,8 +35,8 @@ fake_greater_429_response_topic = "$dps/registrations/res/430/?"
 fake_assigning_status = "assigning"
 fake_assigned_status = "assigned"
 fake_provisioning_host = "hogwarts.com"
-fake_x509_cert_value = "fantastic_beasts"
-fake_x509_cert_key = "where_to_find_them"
+fake_x509_cert_file_value = "fantastic_beasts"
+fake_x509_cert_key_file = "where_to_find_them"
 fake_pass_phrase = "alohomora"
 
 
@@ -59,7 +59,7 @@ def symmetric_key_security_client():
 
 
 def x509_security_client():
-    mock_x509 = FakeX509(fake_x509_cert_value, fake_x509_cert_key, fake_pass_phrase)
+    mock_x509 = FakeX509(fake_x509_cert_file_value, fake_x509_cert_key_file, fake_pass_phrase)
     return X509SecurityClient(
         provisioning_host=fake_provisioning_host,
         registration_id=fake_registration_id,

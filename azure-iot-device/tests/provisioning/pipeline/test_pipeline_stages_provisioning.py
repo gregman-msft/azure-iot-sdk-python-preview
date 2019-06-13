@@ -6,6 +6,7 @@
 import logging
 import pytest
 import functools
+from azure.iot.device.common.models.x509 import X509
 from azure.iot.device.provisioning.security.sk_security_client import SymmetricKeySecurityClient
 from azure.iot.device.provisioning.security.x509_security_client import X509SecurityClient
 from azure.iot.device.provisioning.pipeline import (
@@ -34,20 +35,13 @@ fake_id_scope = "weasley_wizard_wheezes"
 fake_ca_cert = "fake_certificate"
 fake_sas_token = "horcrux_token"
 fake_symmetric_key = "Zm9vYmFy"
-fake_x509_cert_value = "fantastic_beasts"
-fake_x509_cert_key = "where_to_find_them"
+fake_x509_cert_file = "fantastic_beasts"
+fake_x509_cert_key_file = "where_to_find_them"
 fake_pass_phrase = "alohomora"
 
 
-class FakeX509(object):
-    def __init__(self, cert, key, pass_phrase):
-        self.certificate = cert
-        self.key = key
-        self.pass_phrase = pass_phrase
-
-
 def create_x509_security_client():
-    mock_x509 = FakeX509(fake_x509_cert_value, fake_x509_cert_key, fake_pass_phrase)
+    mock_x509 = X509(fake_x509_cert_file, fake_x509_cert_key_file, fake_pass_phrase)
     return X509SecurityClient(
         provisioning_host=fake_provisioning_host,
         registration_id=fake_registration_id,
@@ -229,8 +223,8 @@ class TestUseSymmetricKeyOrX509SecurityClientRunOpWithSetSecurityClient(object):
 
         elif params_security_ops["next_op_class"].__name__ == "SetClientAuthenticationCertificate":
             set_cert_op = security_stage.next._run_op.call_args_list[1][0][0]
-            assert set_cert_op.certificate.certificate == fake_x509_cert_value
-            assert set_cert_op.certificate.key == fake_x509_cert_key
+            assert set_cert_op.certificate.certificate_file == fake_x509_cert_file
+            assert set_cert_op.certificate.key_file == fake_x509_cert_key_file
             assert set_cert_op.certificate.pass_phrase == fake_pass_phrase
 
     @pytest.mark.it(

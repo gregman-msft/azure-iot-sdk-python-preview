@@ -9,8 +9,12 @@ Azure Provisioning Device SDK for Python.
 
 import logging
 from azure.iot.device.common import async_adapter
-from azure.iot.device.provisioning.abstract_provisioning_device_client import AbstractProvisioningDeviceClient
-from azure.iot.device.provisioning.abstract_provisioning_device_client import log_on_register_complete
+from azure.iot.device.provisioning.abstract_provisioning_device_client import (
+    AbstractProvisioningDeviceClient,
+)
+from azure.iot.device.provisioning.abstract_provisioning_device_client import (
+    log_on_register_complete,
+)
 from azure.iot.device.provisioning.internal.polling_machine import PollingMachine
 
 logger = logging.getLogger(__name__)
@@ -39,14 +43,14 @@ class X509ProvisioningDeviceClient(AbstractProvisioningDeviceClient):
         If a registration attempt is made while a previous registration is in progress it may throw an error.
         """
         logger.info("Registering with Hub...")
-        send_event_async = async_adapter.emulate_async(self._polling_machine.register)
+        register_async = async_adapter.emulate_async(self._polling_machine.register)
 
         def sync_on_register_complete(result=None, error=None):
             log_on_register_complete(result, error)
 
         callback = async_adapter.AwaitableCallback(sync_on_register_complete)
 
-        await send_event_async(callback=callback)
+        await register_async(callback=callback)
         await callback.completion()
 
     async def cancel(self):
@@ -57,12 +61,12 @@ class X509ProvisioningDeviceClient(AbstractProvisioningDeviceClient):
         no registration process to cancel.
         """
         logger.info("Disconnecting from Hub...")
-        disconnect_async = async_adapter.emulate_async(self._pipeline.disconnect)
+        cancel_async = async_adapter.emulate_async(self._polling_machine.cancel)
 
         def sync_on_cancel_complete():
             logger.info("Successfully cancelled the current registration process")
 
         callback = async_adapter.AwaitableCallback(sync_on_cancel_complete)
 
-        await disconnect_async(callback=callback)
+        await cancel_async(callback=callback)
         await callback.completion()

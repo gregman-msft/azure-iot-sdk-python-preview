@@ -61,19 +61,6 @@ def create_symmetric_key_security_client():
     )
 
 
-#
-# @pytest.fixture
-# def get_sas_token():
-#     sec_client = create_symmetric_key_security_client()
-#     return sec_client.get_current_sas_token()
-#
-#
-# @pytest.fixture
-# def get_x509_cert():
-#     sec_client = create_x509_security_client()
-#     return sec_client.get_x509_certificate()
-
-
 different_security_clients = [
     pytest.param(
         {

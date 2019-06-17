@@ -10,8 +10,7 @@ from azure.iot.device.provisioning.aio.async_provisioning_device_client import (
 from azure.iot.device.provisioning.models import RegistrationResult
 from azure.iot.device.common.models.x509 import X509
 import pytest
-from azure.iot.device.provisioning.security.sk_security_client import SymmetricKeySecurityClient
-from azure.iot.device.provisioning.security.x509_security_client import X509SecurityClient
+from azure.iot.device.provisioning.pipeline import pipeline_ops_provisioning
 
 pytestmark = pytest.mark.asyncio
 
@@ -51,14 +50,15 @@ class TestClientCreate(object):
             pytest.param("http", id="http", marks=xfail_notimplemented),
         ],
     )
-    async def test_create_from_symmetric_key(self, protocol):
+    async def test_create_from_symmetric_key(self, mocker, protocol):
+        patch_set_sym_client = mocker.patch.object(
+            pipeline_ops_provisioning, "SetSymmetricKeySecurityClient"
+        )
         client = ProvisioningDeviceClient.create_from_symmetric_key(
             fake_provisioning_host, fake_symmetric_key, fake_registration_id, fake_id_scope
         )
         assert isinstance(client, ProvisioningDeviceClient)
-        assert isinstance(
-            client._provisioning_pipeline._security_client, SymmetricKeySecurityClient
-        )
+        assert patch_set_sym_client.call_count == 1
         assert client._provisioning_pipeline is not None
 
     @pytest.mark.it("Is created from a x509 certificate key and protocol")
@@ -71,12 +71,15 @@ class TestClientCreate(object):
             pytest.param("http", id="http", marks=xfail_notimplemented),
         ],
     )
-    async def test_create_from_x509_cert(self, protocol):
+    async def test_create_from_x509_cert(self, mocker, protocol):
+        patch_set_x509_client = mocker.patch.object(
+            pipeline_ops_provisioning, "SetX509SecurityClient"
+        )
         client = ProvisioningDeviceClient.create_from_x509_certificate(
             fake_provisioning_host, fake_registration_id, fake_id_scope, fake_x509()
         )
         assert isinstance(client, ProvisioningDeviceClient)
-        assert isinstance(client._provisioning_pipeline._security_client, X509SecurityClient)
+        assert patch_set_x509_client.call_count == 1
         assert client._provisioning_pipeline is not None
 
 
@@ -109,7 +112,9 @@ class TestClientCallsPollingMachine(object):
 
         client = ProvisioningDeviceClient(mqtt_provisioning_pipeline)
         await client.register()
+
         assert mock_polling_machine_success.register.call_count == 1
+        assert callable(mock_polling_machine_success.register.call_args[1]["callback"])
 
     @pytest.mark.it("Cancel calls cancel on polling machine with passed in callback")
     async def test_client_cancel_calls_polling_machine_cancel_with_callback(
@@ -123,5 +128,6 @@ class TestClientCallsPollingMachine(object):
 
         client = ProvisioningDeviceClient(mqtt_provisioning_pipeline)
         await client.cancel()
+
         assert mock_polling_machine_success.cancel.call_count == 1
-        assert "callback" in mock_polling_machine_success.cancel.call_args[1]
+        assert callable(mock_polling_machine_success.cancel.call_args[1]["callback"])

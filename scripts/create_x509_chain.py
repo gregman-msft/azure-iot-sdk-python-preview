@@ -33,7 +33,7 @@ def create_custom_config():
     ca_default_regex = re.compile(r"\s*\[\s*CA_default\s*\]\s*")
     ca_default_section_found = False
     policy_regex = re.compile(r"\s*\s*(policy\s*=\s*policy_strict|policy\s*=\s*policy_match)")
-    with open("C:/OpenSSL-Win64/bin/openssl.cfg", "r") as change_openssl_config:
+    with open(config_path, "r") as change_openssl_config:
         for line in change_openssl_config:
             if not ca_default_section_found and re.search(ca_default_regex, line):
                 ca_default_section_found = True

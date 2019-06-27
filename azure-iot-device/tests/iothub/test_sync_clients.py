@@ -13,6 +13,14 @@ from azure.iot.device.iothub.pipeline import IoTHubPipeline, constant
 from azure.iot.device.iothub.models import Message, MethodRequest, MethodResponse
 from azure.iot.device.iothub.sync_inbox import SyncClientInbox, InboxEmpty
 from azure.iot.device.iothub.auth import IoTEdgeError
+from azure.iot.device.common.models.x509 import X509
+
+hostname = "beauxbatons.academy-net"
+device_id = "MyPensieve"
+fake_x509_cert_value = "fantastic_beasts"
+fake_x509_cert_key = "where_to_find_them"
+fake_pass_phrase = "alohomora"
+
 
 # connection string and pipeline fixtures are implicitly included
 
@@ -118,6 +126,29 @@ class SharedClientFromCreateFromSharedAccessSignature(object):
         assert mock_auth_parse.call_count == 1
         assert mock_pipeline_init.call_count == 1
         assert mock_pipeline_init.call_args == mocker.call(mock_auth_parse.return_value)
+        assert client._pipeline == mock_pipeline_init.return_value
+
+
+class SharedClientFromCreateFromX509Certificate(object):
+    @pytest.mark.it("Instantiates the client, given a valid X509 certificate object")
+    def test_instantiates_client(self, client_class, x509):
+        client = client_class.create_from_x509_certificate(
+            hostname=hostname, device_id=device_id, x509=x509
+        )
+        assert isinstance(client, client_class)
+
+    @pytest.mark.it("Uses a X509AuthenticationProvider to create the client's IoTHub pipeline")
+    def test_auth_provider_and_pipeline(self, mocker, client_class):
+        mock_auth = mocker.patch("azure.iot.device.iothub.auth.X509AuthenticationProvider")
+        mock_pipeline_init = mocker.patch("azure.iot.device.iothub.abstract_clients.IoTHubPipeline")
+
+        client = client_class.create_from_x509_certificate(
+            hostname=hostname, device_id=device_id, x509=mocker.MagicMock()
+        )
+
+        assert mock_auth.call_count == 1
+        assert mock_pipeline_init.call_count == 1
+        assert mock_pipeline_init.call_args == mocker.call(mock_auth.return_value)
         assert client._pipeline == mock_pipeline_init.return_value
 
 
@@ -585,6 +616,10 @@ class IoTHubDeviceClientTestsConfig(object):
     def sas_token_string(self, device_sas_token_string):
         return device_sas_token_string
 
+    @pytest.fixture
+    def x509(self):
+        return X509(fake_x509_cert_value, fake_x509_cert_key, fake_pass_phrase)
+
 
 @pytest.mark.describe("IoTHubDeviceClient (Synchronous) - Instantiation")
 class TestIoTHubDeviceClientInstantiation(
@@ -606,6 +641,13 @@ class TestIoTHubDeviceClientCreateFromConnectionString(
 @pytest.mark.describe("IoTHubDeviceClient (Synchronous) - .create_from_shared_access_signature()")
 class TestIoTHubDeviceClientCreateFromSharedAccessSignature(
     IoTHubDeviceClientTestsConfig, SharedClientFromCreateFromSharedAccessSignature
+):
+    pass
+
+
+@pytest.mark.describe("IoTHubDeviceClient (Synchronous) - .create_from_x509_certificate()")
+class TestIoTHubDeviceClientCreateFromX509Certificate(
+    IoTHubDeviceClientTestsConfig, SharedClientFromCreateFromX509Certificate
 ):
     pass
 

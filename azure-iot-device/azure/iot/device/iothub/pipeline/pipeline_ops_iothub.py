@@ -6,6 +6,8 @@
 from azure.iot.device.common.pipeline import PipelineOperation
 
 
+# TODO This class handles types of operations that use cert.
+# The next op run in serial is SetClientCert.
 class SetX509AuthProviderOperation(PipelineOperation):
     """
     A PipelineOperation object which tells the pipeline to use a particular X509 authorization provider.
@@ -30,6 +32,7 @@ class SetX509AuthProviderOperation(PipelineOperation):
         self.auth_provider = auth_provider
 
 
+# TODO This class handles types of operations that use sas.The next op run in serial is SetSasToken.
 class SetAuthProviderOperation(PipelineOperation):
     """
     A PipelineOperation object which tells the pipeline to use a particular authorization provider.

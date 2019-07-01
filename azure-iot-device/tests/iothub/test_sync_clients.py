@@ -13,14 +13,6 @@ from azure.iot.device.iothub.pipeline import IoTHubPipeline, constant
 from azure.iot.device.iothub.models import Message, MethodRequest, MethodResponse
 from azure.iot.device.iothub.sync_inbox import SyncClientInbox, InboxEmpty
 from azure.iot.device.iothub.auth import IoTEdgeError
-from azure.iot.device.common.models.x509 import X509
-
-hostname = "beauxbatons.academy-net"
-device_id = "MyPensieve"
-fake_x509_cert_value = "fantastic_beasts"
-fake_x509_cert_key = "where_to_find_them"
-fake_pass_phrase = "alohomora"
-
 
 # connection string and pipeline fixtures are implicitly included
 
@@ -133,7 +125,7 @@ class SharedClientFromCreateFromX509Certificate(object):
     @pytest.mark.it("Instantiates the client, given a valid X509 certificate object")
     def test_instantiates_client(self, client_class, x509):
         client = client_class.create_from_x509_certificate(
-            hostname=hostname, device_id=device_id, x509=x509
+            hostname="durmstranginstitute.farend", device_id="MySnitch", x509=x509
         )
         assert isinstance(client, client_class)
 
@@ -143,7 +135,7 @@ class SharedClientFromCreateFromX509Certificate(object):
         mock_pipeline_init = mocker.patch("azure.iot.device.iothub.abstract_clients.IoTHubPipeline")
 
         client = client_class.create_from_x509_certificate(
-            hostname=hostname, device_id=device_id, x509=mocker.MagicMock()
+            hostname="durmstranginstitute.farend", device_id="MySnitch", x509=mocker.MagicMock()
         )
 
         assert mock_auth.call_count == 1
@@ -615,10 +607,6 @@ class IoTHubDeviceClientTestsConfig(object):
     @pytest.fixture
     def sas_token_string(self, device_sas_token_string):
         return device_sas_token_string
-
-    @pytest.fixture
-    def x509(self):
-        return X509(fake_x509_cert_value, fake_x509_cert_key, fake_pass_phrase)
 
 
 @pytest.mark.describe("IoTHubDeviceClient (Synchronous) - Instantiation")

@@ -21,16 +21,23 @@ def x509():
 
 @pytest.mark.describe("X509AuthenticationProvider")
 class TestX509AuthenticationProvider(object):
-    @pytest.mark.it("instantiates correctly with hostname, device_id and x509 certificate object")
-    def test_instantiates_correctly(self):
+    @pytest.mark.it("Instantiates correctly with hostname")
+    def test_instantiates_correctly_with_hostname(self):
+        x509_cert_object = x509()
+        x509_auth_provider = X509AuthenticationProvider(
+            hostname=hostname, device_id=device_id, x509=x509_cert_object
+        )
+        assert x509_auth_provider.hostname == hostname
+
+    @pytest.mark.it("Instantiates correctly with device_id")
+    def test_instantiates_correctly_with_device_id(self):
         x509_cert_object = x509()
         x509_auth_provider = X509AuthenticationProvider(
             hostname=hostname, device_id=device_id, x509=x509_cert_object
         )
         assert x509_auth_provider.device_id == device_id
-        assert x509_auth_provider.hostname == hostname
 
-    @pytest.mark.it("getter correctly retrieves the x509 certificate object")
+    @pytest.mark.it("Getter correctly retrieves the x509 certificate object")
     def test_get_certificate(self):
         x509_cert_object = x509()
         x509_auth_provider = X509AuthenticationProvider(

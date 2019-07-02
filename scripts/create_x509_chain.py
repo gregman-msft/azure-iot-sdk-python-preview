@@ -12,8 +12,8 @@ def create_custom_config():
     # Best options is to have the location of openssl config file in an env variable
     # The openssl config file extension could be "cfg" or "cnf"
 
-    config_path = os.getenv("OPENSSLCONFIG")
-
+    # config_path = os.getenv("OPENSSLCONFIG")
+    config_path = "C:/OpenSSL-Win64/bin/openssl.cfg"
     with open(config_path, "r") as openssl_config:
         config = openssl_config.read()
     lines = config.splitlines()
@@ -70,7 +70,7 @@ def create_verification_cert(nonce):
     os.system(
         "openssl x509 -req -in demoCA/newcerts/verification_csr.pem"
         + " "
-        + "-CA demoCA/newcerts/ca_cert_cn.pem -CAkey demoCA/private/ca_key.pem -passin pass:"
+        + "-CA demoCA/newcerts/ca_cert.pem -CAkey demoCA/private/ca_key.pem -passin pass:"
         + ca_password
         + " "
         + "-CAcreateserial -out demoCA/newcerts/verification_cert.pem -days 300 -sha256"
@@ -104,7 +104,7 @@ def create_certificate_chain(common_name, ca_password, intermediate_password, de
         "openssl req -config demoCA/openssl.cnf -key demoCA/private/ca_key.pem -passin pass:"
         + ca_password
         + " "
-        + "-new -x509 -days 300 -sha256 -extensions v3_ca -out demoCA/newcerts/ca_cert_cn.pem -subj "
+        + "-new -x509 -days 300 -sha256 -extensions v3_ca -out demoCA/newcerts/ca_cert.pem -subj "
         + subject
     )
     print("Done generating root certificate")
@@ -120,13 +120,13 @@ def create_certificate_chain(common_name, ca_password, intermediate_password, de
         "openssl req -config demoCA/openssl.cnf -key demoCA/private/intermediate_key.pem -passin pass:"
         + intermediate_password
         + " "
-        + "-new -sha256 -out demoCA/newcerts/intermediate_csr_cn.pem -subj "
+        + "-new -sha256 -out demoCA/newcerts/intermediate_csr.pem -subj "
         + subject
     )
 
     print("Done generating intermediate CSR")
     os.system(
-        "openssl ca -config demoCA/openssl.cnf -in demoCA/newcerts/intermediate_csr_cn.pem -out demoCA/newcerts/intermediate_cert_cn.pem -keyfile demoCA/private/ca_key.pem -cert demoCA/newcerts/ca_cert_cn.pem -passin pass:"
+        "openssl ca -config demoCA/openssl.cnf -in demoCA/newcerts/intermediate_csr.pem -out demoCA/newcerts/intermediate_cert.pem -keyfile demoCA/private/ca_key.pem -cert demoCA/newcerts/ca_cert.pem -passin pass:"
         + ca_password
         + " "
         + "-extensions v3_ca -days 30 -notext -md sha256 -batch"
@@ -145,12 +145,12 @@ def create_certificate_chain(common_name, ca_password, intermediate_password, de
         "openssl req -config demoCA/openssl.cnf -new -sha256 -key demoCA/private/device_key.pem -passin pass:"
         + device_password
         + " "
-        + "-out demoCA/newcerts/device_csr_cn.pem -subj "
+        + "-out demoCA/newcerts/device_csr.pem -subj "
         + subject
     )
     print("Done generating device CSR")
     os.system(
-        "openssl ca -config demoCA/openssl.cnf -in demoCA/newcerts/device_csr_cn.pem -out demoCA/newcerts/device_cert_cn.pem -keyfile demoCA/private/intermediate_key.pem -cert demoCA/newcerts/intermediate_cert_cn.pem -passin pass:"
+        "openssl ca -config demoCA/openssl.cnf -in demoCA/newcerts/device_csr.pem -out demoCA/newcerts/device_cert.pem -keyfile demoCA/private/intermediate_key.pem -cert demoCA/newcerts/intermediate_cert.pem -passin pass:"
         + intermediate_password
         + " "
         + "-extensions usr_cert -days 3 -notext -md sha256 -batch"

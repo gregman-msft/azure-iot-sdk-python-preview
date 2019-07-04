@@ -113,9 +113,9 @@ class TestUseAuthProviderRunOpWithSetAuthProviderOperation(object):
     @pytest.fixture
     def set_auth_provider_all_args(self, callback, params_auth_provider_ops):
         auth_provider = params_auth_provider_ops["auth_provider_function_name"]()
+        auth_provider.module_id = fake_module_id
 
         if not isinstance(auth_provider, X509AuthenticationProvider):
-            auth_provider.module_id = fake_module_id
             auth_provider.ca_cert = fake_ca_cert
             auth_provider.gateway_hostname = fake_gateway_hostname
         op = params_auth_provider_ops["current_op_class"](auth_provider=auth_provider)
@@ -160,11 +160,11 @@ class TestUseAuthProviderRunOpWithSetAuthProviderOperation(object):
         stage.next._run_op = mocker.Mock()
         stage.run_op(set_auth_provider_all_args)
         set_args = stage.next._run_op.call_args[0][0]
+        assert set_args.module_id == fake_module_id
 
         if params_auth_provider_ops["name"] == "sas_token_auth":
             assert set_args.gateway_hostname == fake_gateway_hostname
             assert set_args.ca_cert == fake_ca_cert
-            assert set_args.module_id == fake_module_id
 
     @pytest.mark.it(
         "Handles any Exceptions raised by SetAuthProviderArgsOperation and returns them through the op callback"

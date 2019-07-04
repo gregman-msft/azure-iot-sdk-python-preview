@@ -13,6 +13,7 @@ device_id = "MyPensieve"
 fake_x509_cert_value = "fantastic_beasts"
 fake_x509_cert_key = "where_to_find_them"
 fake_pass_phrase = "alohomora"
+module_id = "Transfiguration"
 
 
 def x509():
@@ -25,7 +26,7 @@ class TestX509AuthenticationProvider(object):
     def test_instantiates_correctly_with_hostname(self):
         x509_cert_object = x509()
         x509_auth_provider = X509AuthenticationProvider(
-            hostname=hostname, device_id=device_id, x509=x509_cert_object
+            hostname=hostname, x509=x509_cert_object, device_id=device_id
         )
         assert x509_auth_provider.hostname == hostname
 
@@ -33,14 +34,30 @@ class TestX509AuthenticationProvider(object):
     def test_instantiates_correctly_with_device_id(self):
         x509_cert_object = x509()
         x509_auth_provider = X509AuthenticationProvider(
-            hostname=hostname, device_id=device_id, x509=x509_cert_object
+            hostname=hostname, x509=x509_cert_object, device_id=device_id
         )
         assert x509_auth_provider.device_id == device_id
+
+    @pytest.mark.it("Instantiates correctly with module_id")
+    def test_instantiates_correctly_with_module_id(self):
+        x509_cert_object = x509()
+        x509_auth_provider = X509AuthenticationProvider(
+            hostname=hostname, x509=x509_cert_object, device_id=device_id, module_id=module_id
+        )
+        assert x509_auth_provider.module_id == module_id
+
+    @pytest.mark.it("Instantiates correctly with optional module_id")
+    def test_instantiates_correctly_with_device_id_and_optional_module_id(self):
+        x509_cert_object = x509()
+        x509_auth_provider = X509AuthenticationProvider(
+            hostname=hostname, x509=x509_cert_object, device_id=device_id
+        )
+        assert x509_auth_provider.module_id is None
 
     @pytest.mark.it("Getter correctly retrieves the x509 certificate object")
     def test_get_certificate(self):
         x509_cert_object = x509()
         x509_auth_provider = X509AuthenticationProvider(
-            hostname=hostname, device_id=device_id, x509=x509_cert_object
+            hostname=hostname, x509=x509_cert_object, device_id=device_id
         )
         assert x509_auth_provider.get_x509_certificate()

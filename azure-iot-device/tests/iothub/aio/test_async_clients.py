@@ -556,7 +556,7 @@ class TestIoTHubDeviceClientCreateFromX509Certificate(IoTHubDeviceClientTestsCon
         )
         assert isinstance(client, client_class)
 
-    @pytest.mark.it("Uses a X509AuthenticationProvider to create the client's IoTHub pipeline")
+    @pytest.mark.it("Uses an X509AuthenticationProvider to create the client's IoTHub pipeline")
     async def test_auth_provider_and_pipeline(self, mocker, client_class):
         mock_auth = mocker.patch("azure.iot.device.iothub.auth.X509AuthenticationProvider")
         mock_pipeline_init = mocker.patch("azure.iot.device.iothub.abstract_clients.IoTHubPipeline")
@@ -955,7 +955,7 @@ class TestIoTHubModuleClientCreateFromX509Certificate(IoTHubModuleClientTestsCon
         )
         assert isinstance(client, client_class)
 
-    @pytest.mark.it("Uses a X509AuthenticationProvider to create the client's IoTHub pipeline")
+    @pytest.mark.it("Uses an X509AuthenticationProvider to create the client's IoTHub pipeline")
     async def test_auth_provider_and_pipeline(self, mocker, client_class):
         mock_auth = mocker.patch("azure.iot.device.iothub.auth.X509AuthenticationProvider")
         mock_pipeline_init = mocker.patch("azure.iot.device.iothub.abstract_clients.IoTHubPipeline")

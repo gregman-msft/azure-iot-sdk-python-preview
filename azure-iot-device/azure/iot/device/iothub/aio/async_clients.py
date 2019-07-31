@@ -184,19 +184,14 @@ class GenericIoTHubClient(AbstractIoTHubClient):
 
         get_twin_async = async_adapter.emulate_async(self._iothub_pipeline.get_twin)
 
-        twin = None
-
         def sync_callback(received_twin):
-            nonlocal twin
             logger.info("Successfully retrieved twin")
-            twin = received_twin
+            return received_twin
 
         callback = async_adapter.AwaitableCallback(sync_callback)
 
         await get_twin_async(callback=callback)
-        await callback.completion()
-
-        return twin
+        return await callback.completion()
 
     async def patch_twin_reported_properties(self, reported_properties_patch):
         """

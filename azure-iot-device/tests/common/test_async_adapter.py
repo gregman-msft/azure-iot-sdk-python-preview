@@ -77,10 +77,9 @@ class TestAwaitableCallback(object):
         self, mocker, mock_function
     ):
         callback = async_adapter.AwaitableCallback(mock_function)
-        result = callback()
+        callback()
         assert mock_function.call_count == 1
         assert mock_function.call_args == mocker.call()
-        assert result == mock_function.return_value
 
     @pytest.mark.it("Completes the instance Future when a call is invoked on the instance")
     async def test_calling_object_completes_future(self, mock_function):
@@ -93,18 +92,16 @@ class TestAwaitableCallback(object):
     @pytest.mark.it("Can be called using positional arguments")
     async def test_can_be_called_using_positional_args(self, mocker, mock_function):
         callback = async_adapter.AwaitableCallback(mock_function)
-        result = callback(1, 2, 3)
+        callback(1, 2, 3)
         assert mock_function.call_count == 1
         assert mock_function.call_args == mocker.call(1, 2, 3)
-        assert result == mock_function.return_value
 
     @pytest.mark.it("Can be called using explicit keyword arguments")
     async def test_can_be_called_using_explicit_kwargs(self, mocker, mock_function):
         callback = async_adapter.AwaitableCallback(mock_function)
-        result = callback(a=1, b=2, c=3)
+        callback(a=1, b=2, c=3)
         assert mock_function.call_count == 1
         assert mock_function.call_args == mocker.call(a=1, b=2, c=3)
-        assert result == mock_function.return_value
 
     @pytest.mark.it("Can have its callback completion awaited upon")
     async def test_awaiting_completion_of_callback_returns_result(self, mock_function):

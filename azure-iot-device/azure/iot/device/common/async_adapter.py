@@ -52,10 +52,6 @@ class AwaitableCallback(object):
             else:
                 loop.call_soon_threadsafe(self.future.set_result, result)
 
-            # TODO: old impl returned result to wrapping_callack.  If we're awaiting this, then there's
-            # no need to return it, right?
-            # TODO: what happens if callback raises a BaseException.  Do we need to marshal that over too?  If so, we may need to do the same thing in sync code.  Try thinking about it there first.
-
         self.callback = wrapping_callback
 
     def __call__(self, *args, **kwargs):

@@ -143,11 +143,35 @@ def create_message_with_user_properties(message_content, is_multiple):
 
 
 def create_message_with_system_and_user_properties(message_content, is_multiple):
-    # msg = None
     if is_multiple:
         msg = Message(message_content, message_id=fake_message_id, content_type=fake_content_type)
     else:
         msg = Message(message_content, message_id=fake_message_id)
+
+    msg.custom_properties[fake_message_user_property_1_key] = fake_message_user_property_1_value
+    if is_multiple:
+        msg.custom_properties[fake_message_user_property_2_key] = fake_message_user_property_2_value
+    return msg
+
+
+def create_message_for_output_with_user_properties(message_content, is_multiple):
+    m = Message(message_content, output_name=fake_output_name)
+    m.custom_properties[fake_message_user_property_1_key] = fake_message_user_property_1_value
+    if is_multiple:
+        m.custom_properties[fake_message_user_property_2_key] = fake_message_user_property_2_value
+    return m
+
+
+def create_message_for_output_with_system_and_user_properties(message_content, is_multiple):
+    if is_multiple:
+        msg = Message(
+            message_content,
+            output_name=fake_output_name,
+            message_id=fake_message_id,
+            content_type=fake_content_type,
+        )
+    else:
+        msg = Message(message_content, output_name=fake_output_name, message_id=fake_message_id)
 
     msg.custom_properties[fake_message_user_property_1_key] = fake_message_user_property_1_value
     if is_multiple:
@@ -530,7 +554,7 @@ publish_ops = [
         "publish_payload": fake_message_body,
     },
     {
-        "name": "send output with properties",
+        "name": "send output with system properties",
         "stage_type": "module",
         "op_class": pipeline_ops_iothub.SendOutputEventOperation,
         "op_init_kwargs": {
@@ -540,6 +564,63 @@ publish_ops = [
         },
         "topic": "devices/{}/modules/{}/messages/events/%24.on={}&{}".format(
             fake_device_id, fake_module_id, fake_output_name, fake_content_type_encoded
+        ),
+        "publish_payload": fake_message_body,
+    },
+    {
+        "name": "send output with only 1 user property",
+        "stage_type": "module",
+        "op_class": pipeline_ops_iothub.SendOutputEventOperation,
+        "op_init_kwargs": {
+            "message": create_message_for_output_with_user_properties(
+                fake_message_body, is_multiple=False
+            )
+        },
+        "topic": "devices/{}/modules/{}/messages/events/%24.on={}&{}".format(
+            fake_device_id, fake_module_id, fake_output_name, fake_message_user_property_1_encoded
+        ),
+        "publish_payload": fake_message_body,
+    },
+    {
+        "name": "send output with only multiple user properties",
+        "stage_type": "module",
+        "op_class": pipeline_ops_iothub.SendOutputEventOperation,
+        "op_init_kwargs": {
+            "message": create_message_for_output_with_user_properties(
+                fake_message_body, is_multiple=True
+            )
+        },
+        "topic1": "devices/{}/modules/{}/messages/events/%24.on={}&{}&{}".format(
+            fake_device_id,
+            fake_module_id,
+            fake_output_name,
+            fake_message_user_property_1_encoded,
+            fake_message_user_property_2_encoded,
+        ),
+        "topic2": "devices/{}/modules/{}/messages/events/%24.on={}&{}&{}".format(
+            fake_device_id,
+            fake_module_id,
+            fake_output_name,
+            fake_message_user_property_2_encoded,
+            fake_message_user_property_1_encoded,
+        ),
+        "publish_payload": fake_message_body,
+    },
+    {
+        "name": "send output with 1 system and 1 user property",
+        "stage_type": "module",
+        "op_class": pipeline_ops_iothub.SendOutputEventOperation,
+        "op_init_kwargs": {
+            "message": create_message_for_output_with_system_and_user_properties(
+                fake_message_body, is_multiple=False
+            )
+        },
+        "topic": "devices/{}/modules/{}/messages/events/%24.on={}&{}&{}".format(
+            fake_device_id,
+            fake_module_id,
+            fake_output_name,
+            fake_message_id_encoded,
+            fake_message_user_property_1_encoded,
         ),
         "publish_payload": fake_message_body,
     },

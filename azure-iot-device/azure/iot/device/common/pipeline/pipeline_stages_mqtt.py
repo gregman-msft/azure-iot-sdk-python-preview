@@ -13,7 +13,7 @@ from . import (
     operation_flow,
     pipeline_thread,
 )
-from azure.iot.device.common.mqtt_transport import MQTTTransport
+from azure.iot.device.common import mqtt_transport
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ class MQTTTransportStage(PipelineStage):
             self.sas_token = op.sas_token
             self.client_cert = op.client_cert
 
-            self.transport = MQTTTransport(
+            self.transport = mqtt_transport.MQTTTransport(
                 client_id=self.client_id,
                 hostname=self.hostname,
                 username=self.username,

@@ -68,8 +68,12 @@ class GenericIoTHubClient(AbstractIoTHubClient):
         """
         logger.info("Connecting to Hub...")
 
-        def wrapped_callback():
-            logger.info("Successfully connected to Hub")
+        def wrapped_callback(error=None):
+            if error:
+                logger.info("Error connecting to hub: {}".format(error))
+                raise error
+            else:
+                logger.info("Successfully connected to Hub")
 
         callback = EventedCallback(wrapped_callback)
 
@@ -84,8 +88,12 @@ class GenericIoTHubClient(AbstractIoTHubClient):
         """
         logger.info("Disconnecting from Hub...")
 
-        def wrapped_callback():
-            logger.info("Successfully disconnected from Hub")
+        def wrapped_callback(error=None):
+            if error:
+                logger.info("Error disconnecting from hub: {}".format(error))
+                raise error
+            else:
+                logger.info("Successfully disconnected from Hub")
 
         callback = EventedCallback(wrapped_callback)
 
@@ -109,8 +117,12 @@ class GenericIoTHubClient(AbstractIoTHubClient):
 
         logger.info("Sending message to Hub...")
 
-        def wrapped_callback():
-            logger.info("Successfully sent message to Hub")
+        def wrapped_callback(error=None):
+            if error:
+                logger.info("Error sending message to hub: {}".format(error))
+                raise error
+            else:
+                logger.info("Successfully sent message to Hub")
 
         callback = EventedCallback(wrapped_callback)
 
@@ -156,8 +168,12 @@ class GenericIoTHubClient(AbstractIoTHubClient):
         """
         logger.info("Sending method response to Hub...")
 
-        def wrapped_callback():
-            logger.info("Successfully sent method response to Hub")
+        def wrapped_callback(error=None):
+            if error:
+                logger.info("Error sending method reponse to hub: {}".format(error))
+                raise error
+            else:
+                logger.info("Successfully sent method response to Hub")
 
         callback = EventedCallback(wrapped_callback)
 
@@ -175,8 +191,12 @@ class GenericIoTHubClient(AbstractIoTHubClient):
         """
         logger.info("Enabling feature:" + feature_name + "...")
 
-        def wrapped_callback():
-            logger.info("Successfully enabled feature:" + feature_name)
+        def wrapped_callback(error=None):
+            if error:
+                logger.info("Error enabling feature {} : {}".format(feature_name, error))
+                raise error
+            else:
+                logger.info("Successfully enabled feature:" + feature_name)
 
         callback = EventedCallback(wrapped_callback)
 
@@ -195,9 +215,13 @@ class GenericIoTHubClient(AbstractIoTHubClient):
         if not self._iothub_pipeline.feature_enabled[constant.TWIN]:
             self._enable_feature(constant.TWIN)
 
-        def wrapped_callback(retrieved_twin):
-            logger.info("Successfully retrieved twin")
-            return retrieved_twin
+        def wrapped_callback(twin, error=None):
+            if error:
+                logger.info("Error connecting to hub: {}".format(error))
+                raise error
+            else:
+                logger.info("Successfully retrieved twin")
+                return twin
 
         callback = EventedCallback(wrapped_callback)
 
@@ -220,8 +244,12 @@ class GenericIoTHubClient(AbstractIoTHubClient):
         if not self._iothub_pipeline.feature_enabled[constant.TWIN]:
             self._enable_feature(constant.TWIN)
 
-        def wrapped_callback():
-            logger.info("Successfully patched twin")
+        def wrapped_callback(error=None):
+            if error:
+                logger.info("Error patching twin: {}".format(error))
+                raise error
+            else:
+                logger.info("Successfully patched twin")
 
         callback = EventedCallback(wrapped_callback)
 
@@ -347,8 +375,12 @@ class IoTHubModuleClient(GenericIoTHubClient, AbstractIoTHubModuleClient):
 
         logger.info("Sending message to output:" + output_name + "...")
 
-        def wrapped_callback():
-            logger.info("Successfully sent message to output: " + output_name)
+        def wrapped_callback(error=None):
+            if error:
+                logger.info("Error sending output message to hub: {}".format(error))
+                raise error
+            else:
+                logger.info("Successfully sent message to output: " + output_name)
 
         callback = EventedCallback(wrapped_callback)
 

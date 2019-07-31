@@ -29,6 +29,11 @@ async def create_completed_future(result=None):
     return f
 
 
+@pytest.fixture(autouse=True)
+def mock_transport(mocker):
+    mocker.patch("azure.iot.device.common.mqtt_transport.MQTTTransport", autospec=True)
+
+
 class SharedClientInstantiationTests(object):
     @pytest.mark.it(
         "Stores the IoTHubPipeline from the 'iothub_pipeline' parameter in the '_iothub_pipeline' attribute"

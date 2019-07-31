@@ -6,6 +6,7 @@
 
 import logging
 import sys
+from azure.iot.device.common.evented_callback import EventedCallback
 from azure.iot.device.common.pipeline import (
     pipeline_stages_base,
     pipeline_ops_base,
@@ -95,22 +96,26 @@ class IoTHubPipeline(object):
         self._pipeline.on_connected = _handle_connected
         self._pipeline.on_disconnected = _handle_disconnected
 
-        def remove_this_code(call):
+        def wrapped_callback(call):
+            logger.info("{}: auth provider init complete")
             if call.error:
                 raise call.error
 
+        callback = EventedCallback(wrapped_callback)
+
         if isinstance(auth_provider, X509AuthenticationProvider):
             op = pipeline_ops_iothub.SetX509AuthProviderOperation(
-                auth_provider=auth_provider, callback=remove_this_code
+                auth_provider=auth_provider, callback=callback
             )
         else:  # Currently everything else goes via this block.
             op = pipeline_ops_iothub.SetAuthProviderOperation(
-                auth_provider=auth_provider, callback=remove_this_code
+                auth_provider=auth_provider, callback=callback
             )
 
         self._pipeline.run_op(op)
+        callback.wait()
 
-    def connect(self, callback=None):
+    def connect(self, callback):
         """
         Connect to the service.
 
@@ -120,14 +125,13 @@ class IoTHubPipeline(object):
 
         def on_complete(call):
             if call.error:
-                # TODO we need error semantics on the client
-                sys.exit(1)  # TODO: raise an error instead
-            if callback:
+                callback(error=call.errror)
+            else:
                 callback()
 
         self._pipeline.run_op(pipeline_ops_base.ConnectOperation(callback=on_complete))
 
-    def disconnect(self, callback=None):
+    def disconnect(self, callback):
         """
         Disconnect from the service.
 
@@ -137,14 +141,13 @@ class IoTHubPipeline(object):
 
         def on_complete(call):
             if call.error:
-                # TODO we need error semantics on the client
-                sys.exit(1)
-            if callback:
+                callback(error=call.errror)
+            else:
                 callback()
 
         self._pipeline.run_op(pipeline_ops_base.DisconnectOperation(callback=on_complete))
 
-    def send_d2c_message(self, message, callback=None):
+    def send_d2c_message(self, message, callback):
         """
         Send a telemetry message to the service.
 
@@ -154,16 +157,15 @@ class IoTHubPipeline(object):
 
         def on_complete(call):
             if call.error:
-                # TODO we need error semantics on the client
-                sys.exit(1)
-            if callback:
+                callback(error=call.errror)
+            else:
                 callback()
 
         self._pipeline.run_op(
             pipeline_ops_iothub.SendD2CMessageOperation(message=message, callback=on_complete)
         )
 
-    def send_output_event(self, message, callback=None):
+    def send_output_event(self, message, callback):
         """
         Send an output message to the service.
 
@@ -173,16 +175,15 @@ class IoTHubPipeline(object):
 
         def on_complete(call):
             if call.error:
-                # TODO we need error semantics on the client
-                sys.exit(1)
-            if callback:
+                callback(error=call.errror)
+            else:
                 callback()
 
         self._pipeline.run_op(
             pipeline_ops_iothub.SendOutputEventOperation(message=message, callback=on_complete)
         )
 
-    def send_method_response(self, method_response, callback=None):
+    def send_method_response(self, method_response, callback):
         """
         Send a method response to the service.
 
@@ -193,9 +194,8 @@ class IoTHubPipeline(object):
 
         def on_complete(call):
             if call.error:
-                # TODO we need error semantics on the client
-                sys.exit(1)
-            if callback:
+                callback(error=call.errror)
+            else:
                 callback()
 
         self._pipeline.run_op(
@@ -214,13 +214,13 @@ class IoTHubPipeline(object):
 
         def on_complete(call):
             if call.error:
-                sys.exit(1)
-            if callback:
-                callback(call.twin)
+                callback(error=call.errror, twin=None)
+            else:
+                callback(twin=call.twin)
 
         self._pipeline.run_op(pipeline_ops_iothub.GetTwinOperation(callback=on_complete))
 
-    def patch_twin_reported_properties(self, patch, callback=None):
+    def patch_twin_reported_properties(self, patch, callback):
         """
         Send a patch for a twin's reported properties to the service.
 
@@ -230,8 +230,8 @@ class IoTHubPipeline(object):
 
         def on_complete(call):
             if call.error:
-                sys.exit(1)
-            if callback:
+                callback(error=call.errror)
+            else:
                 callback()
 
         self._pipeline.run_op(
@@ -240,7 +240,7 @@ class IoTHubPipeline(object):
             )
         )
 
-    def enable_feature(self, feature_name, callback=None):
+    def enable_feature(self, feature_name, callback):
         """
         Enable the given feature by subscribing to the appropriate topics.
 
@@ -256,9 +256,8 @@ class IoTHubPipeline(object):
 
         def on_complete(call):
             if call.error:
-                # TODO we need error semantics on the client
-                sys.exit(1)
-            if callback:
+                callback(error=call.errror)
+            else:
                 callback()
 
         self._pipeline.run_op(
@@ -267,7 +266,7 @@ class IoTHubPipeline(object):
             )
         )
 
-    def disable_feature(self, feature_name, callback=None):
+    def disable_feature(self, feature_name, callback):
         """
         Disable the given feature by subscribing to the appropriate topics.
         :param callback: callback which is called when the feature is disabled
@@ -283,9 +282,8 @@ class IoTHubPipeline(object):
 
         def on_complete(call):
             if call.error:
-                # TODO we need error semantics on the client
-                sys.exit(1)
-            if callback:
+                callback(error=call.error)
+            else:
                 callback()
 
         self._pipeline.run_op(

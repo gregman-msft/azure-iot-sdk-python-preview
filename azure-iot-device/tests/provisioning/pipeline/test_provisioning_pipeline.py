@@ -107,9 +107,7 @@ def mock_provisioning_pipeline(params_security_clients):
     input_security_client = params_security_clients["client_class"](
         **params_security_clients["init_kwargs"]
     )
-    with patch(
-        "azure.iot.device.provisioning.pipeline.provisioning_pipeline.pipeline_stages_mqtt.MQTTTransport"
-    ):
+    with patch("azure.iot.device.common.mqtt_transport.MQTTTransport"):
         provisioning_pipeline = ProvisioningPipeline(input_security_client)
     provisioning_pipeline.on_connected = MagicMock()
     provisioning_pipeline.on_disconnected = MagicMock()

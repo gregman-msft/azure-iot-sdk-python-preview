@@ -17,7 +17,7 @@ This repository contains the following SDKs:
 
 * Azure IoT Hub SDK **COMING SOON**
 
-* Azure IoT Hub Provisioning SDK **COMING SOON**
+* Azure IoT Hub Provisioning Service SDK **COMING SOON**
 
 # How to install the SDKs
 
